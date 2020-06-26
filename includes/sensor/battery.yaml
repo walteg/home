@@ -1,0 +1,38 @@
+  - platform: template 
+    sensors: 
+      158d00039522c2_battery: 
+        value_template: "{{ state_attr('binary_sensor.door_window_sensor_158d00039522c2', 'battery_level')}}" 
+        unit_of_measurement: '%' 
+        entity_id: binary_sensor.door_window_sensor_158d00039522c2 
+        device_class: battery 
+        friendly_name: 'Геркон' 
+        
+  - platform: template 
+    sensors: 
+      158d00032c827f_battery: 
+        value_template: "{{ state_attr('binary_sensor.motion_sensor_158d00032c827f', 'battery_level')}}" 
+        unit_of_measurement: '%' 
+        entity_id: binary_sensor.motion_sensor_158d00032c827f 
+        device_class: battery 
+        friendly_name: 'Датчика движения' 
+    
+  - platform: template 
+    sensors: 
+      158d000287ef82_battery: 
+        value_template: "{{ state_attr('binary_sensor.water_leak_sensor_158d000287ef82', 'battery_level')}}" 
+        unit_of_measurement: '%' 
+        entity_id: binary_sensor.water_leak_sensor_158d000287ef82 
+        device_class: battery 
+        friendly_name: 'Датчика протечки' 
+        
+  - platform: template 
+    sensors: 
+      158d0002d8099e_battery: 
+        value_template: "{{ state_attr('sensor.humidity_158d0002d8099e', 'battery_level')}}" 
+        unit_of_measurement: '%' 
+        entity_id: sensor.humidity_158d0002d8099e 
+        device_class: battery 
+        friendly_name: 'Общий датчик' 
+        
+        
+

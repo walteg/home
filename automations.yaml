@@ -1,0 +1,217 @@
+##====================Действия========================= 
+
+#Включить свет на кухне от движения 
+- alias: Движение на кухне 
+  initial_state: true 
+  trigger: 
+    - platform: event 
+      event_type: xiaomi_aqara.motion 
+      event_data: 
+        entity_id: binary_sensor.motion_sensor_158d00032c827f 
+  action: 
+    - service: light.turn_on 
+      entity_id: light.podsvetka_na_kukhne 
+
+#Выключить свет на кухне, если нет движения более 3х минут 
+- alias: Не движения на кухне 
+  initial_state: true 
+  trigger: 
+    - platform: state 
+      entity_id: binary_sensor.motion_sensor_158d00032c827f 
+      to: 'off' 
+      for: 
+        minutes: 1 
+  action: 
+    - service: light.turn_off 
+      entity_id: light.podsvetka_na_kukhne 
+
+#Включить свет в коридоре при открытие двери 
+- alias: Свет в коридоре sonoff 
+  initial_state: true 
+  trigger: 
+    - platform: state 
+      entity_id: binary_sensor.door_window_sensor_158d00039522c2 
+      to: 'on' 
+  condition: 
+    - condition: state 
+      entity_id: alarm_control_panel.xiaomi_gateway_alarm 
+      state: disarmed 
+  action: 
+    - service: switch.turn_on 
+      entity_id: switch.sonoff_100076e305 
+
+#Выключить свет в коридоре, если дверь закрыта более 3х минут 
+- alias: Выключить свет в коридоре sonoff 
+  initial_state: true 
+  trigger: 
+    - platform: state 
+      entity_id: binary_sensor.door_window_sensor_158d00039522c2 
+      to: 'off' 
+      for: 
+        minutes: 2 
+  action: 
+    - service: switch.turn_off 
+      entity_id: switch.sonoff_100076e305 
+
+#Сигнализация о протечки воды 
+- alias: Вода в ванной 
+  initial_state: true 
+  trigger: 
+    - platform: state 
+      entity_id: binary_sensor.water_leak_sensor_158d000287ef82 
+      to: 'on' 
+  action: 
+    - service: xiaomi_aqara.play_ringtone 
+      data: 
+        gw_mac: 04CF8C981FD5 
+        ringtone_id: 0 
+        ringtone_vol: 30 
+
+#Сигнализация об открытие двери, когда квартира на охране 
+- alias: Дверь открыта 
+  initial_state: true 
+  trigger: 
+    - platform: state 
+      entity_id: binary_sensor.door_window_sensor_158d00039522c2 
+      to: 'on' 
+  condition: 
+    - condition: state 
+      entity_id: alarm_control_panel.xiaomi_gateway_alarm 
+      state: armed_away 
+  action: 
+    - service: xiaomi_aqara.play_ringtone 
+      data: 
+        gw_mac: 04CF8C981FD5 
+        ringtone_id: 0 
+        ringtone_vol: 30 
+
+#Включить увлажнитель, когда влажность ниже 20% 
+- alias: Включить увлажнитель 
+  initial_state: true 
+  trigger: 
+    - platform: numeric_state 
+      entity_id: sensor.158d0002d8099e_humidity 
+      below: '20' 
+  action: 
+    - service: fan.turn_on 
+      entity_id: fan.humidifier 
+
+#Выключить увлажнитель, когда влажность выше 30%         
+- alias: Выключить увлажнитель 
+  initial_state: true 
+  trigger: 
+    - platform: numeric_state 
+      entity_id: sensor.158d0002d8099e_humidity 
+      above: '30' 
+  action: 
+    - service: fan.turn_off 
+      entity_id: fan.humidifier 
+
+#Включить сигналку, если телефон отключился от wi-fi
+- alias: Телефон не дома 
+  initial_state: true 
+  trigger: 
+    - platform: state 
+      entity_id: sensor.iphone_walteg_ssid
+      to: 'Not Connected' 
+  action: 
+    - service: script.alarm_arm_away 
+      entity_id: alarm_control_panel.xiaomi_gateway_alarm
+
+#Выключить сигналку, если телефон подключился к wi-fi
+- alias: Телефон дома 
+  initial_state: true 
+  trigger: 
+    - platform: state 
+      entity_id: sensor.iphone_walteg_ssid
+      to: 'Walteg' 
+  action: 
+    - service: script.alarm_arm_disarm 
+      entity_id: alarm_control_panel.xiaomi_gateway_alarm
+
+##====================PUSH Оповещение=========================
+
+#Push при движение на кухне 
+- alias: Движение на кухне 
+  initial_state: true 
+  trigger: 
+    - platform: event 
+      event_type: xiaomi_aqara.motion 
+      event_data: 
+        entity_id: binary_sensor.motion_sensor_158d00032c827f 
+  condition: 
+    - condition: state 
+      entity_id: alarm_control_panel.xiaomi_gateway_alarm 
+      state: armed_away 
+  action: 
+    - service: notify.notify 
+      data_template:
+        message: Замечено движение на кухне
+
+#Push при открытие двери
+- alias: Дверь открыта 
+  initial_state: true 
+  trigger: 
+    - platform: state 
+      entity_id: binary_sensor.door_window_sensor_158d00039522c2 
+      to: 'on' 
+  condition: 
+    - condition: state 
+      entity_id: alarm_control_panel.xiaomi_gateway_alarm 
+      state: armed_away   
+  action: 
+    - service: notify.notify 
+      data_template:
+        message: Замечено открытие двери
+        
+#Push при протечке в ванне 
+- alias: Вода в ванной 
+  initial_state: true 
+  trigger: 
+    - platform: state 
+      entity_id: binary_sensor.water_leak_sensor_158d000287ef82 
+      to: 'on' 
+  action: 
+    - service: notify.notify 
+      data_template:
+        message: Замечена вода в ванной
+
+
+
+##====================Голосовое оповещение=========================
+
+#Проверка отправки голоса
+- alias: Увлажнитель включен
+  initial_state: true 
+  trigger: 
+    - platform: state 
+      entity_id: fan.humidifier 
+      to: 'on' 
+  action: 
+    - service: tts.yandex_station_say 
+      data_template:
+        message: Увлажнитель включен
+
+#====================TEST========================= 
+
+#Включить подсветку шлюза, если освещение ниже 600 lx
+# - alias: night light enable 
+#   initial_state: true 
+#   trigger: 
+#     - platform: numeric_state 
+#       below: '600' 
+#       entity_id: sensor.illumination_04cf8cb8810e 
+#   action: 
+#     - service: light.turn_on 
+#       entity_id: light.gateway_light_04cf8cb8810e 
+
+#Выключить подсветку шлюза, если освещение выше 600 lx
+# - alias: night light disable 
+#   initial_state: true 
+#   trigger: 
+#     - platform: numeric_state 
+#       above: '600' 
+#       entity_id: sensor.illumination_04cf8cb8810e 
+#   action: 
+#     - service: light.turn_off 
+#       entity_id: light.gateway_light_04cf8cb8810e 

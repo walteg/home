@@ -1,0 +1,8 @@
+#   - platform: template 
+#     sensors: 
+#       fan.humidifier: 
+#         value_template: "{{ state_attr('fan.humidifier', 'temperature')}}" 
+#         unit_of_measurement: '%' 
+#         entity_id: fan.humidifier 
+#         device_class: temperature 
+#         friendly_name: 'Увлажнитель' 

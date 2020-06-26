@@ -1,0 +1,39 @@
+  - platform: template 
+    sensors: 
+      outdoor_temperature: 
+        value_template: "{{ state_attr('weather.gismeteo', 'temperature') }}" 
+        unit_of_measurement: '°C' 
+        entity_id: weather.gismeteo 
+        device_class: temperature 
+        friendly_name: 'Температура на улице' 
+        
+  - platform: template 
+    sensors: 
+      outdoor_humidity: 
+        value_template: "{{ state_attr('weather.gismeteo', 'humidity') }}" 
+        unit_of_measurement: '%' 
+        entity_id: weather.gismeteo 
+        device_class: humidity 
+        friendly_name: 'Влажность на улице' 
+
+  - platform: template 
+    sensors: 
+      outdoor_pressure: 
+        value_template: "{{ state_attr('weather.gismeteo', 'pressure') }}" 
+        unit_of_measurement: 'hPa' 
+        entity_id: weather.gismeteo 
+        device_class: pressure 
+        friendly_name: 'Давление на улице' 
+        
+
+  - platform: template 
+    sensors: 
+      outdoor_wind_speed: 
+        value_template: "{{ state_attr('weather.gismeteo', 'wind_speed') }}" 
+        unit_of_measurement: 'm/s' 
+        entity_id: weather.gismeteo 
+        # device_class: wind
+        
+  - platform: gismeteo
+    monitored_conditions:
+      - weather

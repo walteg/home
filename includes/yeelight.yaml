@@ -1,0 +1,15 @@
+  devices: 
+      192.168.103.4: 
+        name: Комната
+        transition: 1000 
+        model: ceiling3 
+
+      192.168.103.6: 
+        name: Комната
+        transition: 1000 
+        model: strip1 
+
+      192.168.103.7: 
+        name: Кухня
+        transition: 1000 
+        model: mono1bash-5.0# 

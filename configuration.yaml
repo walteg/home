@@ -1,0 +1,62 @@
+
+# Configure a default setup of Home Assistant (frontend, api, etc)
+default_config:
+
+frontend: 
+  themes: !include_dir_merge_named themes 
+
+weather:
+  - platform: gismeteo
+
+# Text to speech
+tts:
+  - platform: google_translate
+
+group: !include groups.yaml
+automation: !include automations.yaml
+script: !include scripts.yaml
+scene: !include scenes.yaml
+yeelight: !include includes/yeelight.yaml 
+
+sensor: !include_dir_merge_list includes/sensor 
+
+xiaomi_aqara: 
+    discovery_retry: 10 
+    gateways: 
+    - mac: 04:CF:8C:98:1F:D5 
+      key: !secret key_xiaomi_gw 
+      host: 192.168.103.2
+      
+hacs: 
+    token: !secret HACS_github
+    appdaemon: true 
+    python_script: tue 
+    theme: true 
+    
+sonoff: 
+  username: !secret username_sonoff
+  password: !secret password_sonoff
+  mode: local 
+  
+fan: 
+  - platform: xiaomi_miio_airpurifier 
+    name: Humidifier 
+    host: 192.168.103.5 
+    token: !secret token_xiaomi_airhumidifier 
+    model: deerma.humidifier.mjjsq 
+
+yandex_station:
+  username: !secret username_yandex
+  password: !secret password_yandex 
+ 
+
+#================TEST===============
+
+# weather:
+#   - platform: yandex_weathe
+#     api_key: 11ab5a9d-a29a-494b-bcd3-a5bd7c63f538
+
+# Example configuration.yaml entry
+# device_tracker:
+#   - platform: bluetooth_tracker
+#     interval_seconds: 1
