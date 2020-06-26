@@ -11,13 +11,15 @@ weather:
 # Text to speech
 tts:
   - platform: google_translate
-
-group: !include groups.yaml
-automation: !include automations.yaml
-script: !include scripts.yaml
-scene: !include scenes.yaml
+  
+#Конфиги вынесены отдельно
+group: !include includes/groups.yaml
+automation: !include includes/automations.yaml
+script: !include includes/scripts.yaml
+scene: !include includes/scenes.yaml
 yeelight: !include includes/yeelight.yaml 
 
+#Отдельные папки с конфигами
 sensor: !include_dir_merge_list includes/sensor 
 
 xiaomi_aqara: 
@@ -56,7 +58,6 @@ yandex_station:
 #   - platform: yandex_weathe
 #     api_key: 11ab5a9d-a29a-494b-bcd3-a5bd7c63f538
 
-# Example configuration.yaml entry
 # device_tracker:
 #   - platform: bluetooth_tracker
 #     interval_seconds: 1
