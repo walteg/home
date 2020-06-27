@@ -1,0 +1,44 @@
+ - platform: template
+   sensors:
+     fan_humidifier_status:
+       friendly_name: 'Увлажнитель'
+       value_template: '{{ states("fan.humidifier") }}'
+       icon_template: mdi:fan
+       
+ - platform: template
+   sensors:
+     lampa_v_komnate_status:
+        friendly_name: 'Лампа в комнате'
+        value_template: '{{ states("light.lampa_v_komnate") }}'
+        icon_template: mdi:ceiling-light
+       
+ - platform: template
+   sensors:
+     podsvetka_v_komnate_status:
+       friendly_name: 'Подсветка в комнате'
+       value_template: '{{ states("light.podsvetka_v_komnate") }}'
+       icon_template: mdi:string-lights
+       
+ - platform: template
+   sensors:
+     sonoff_100076e305_status:
+       friendly_name: 'Подсветка в коридоре'
+       value_template: '{{ states("switch.sonoff_100076e305") }}'
+       icon_template: mdi:flash
+       
+ - platform: template
+   sensors:
+     gateway_light_04cf8c981fd5_status:
+       friendly_name: 'Подсветка в коридоре'
+       value_template: '{{ states("light.gateway_light_04cf8c981fd5") }}'
+       icon_template: mdi:lightbulb
+       
+ - platform: template
+   sensors:
+     podsvetka_na_kukhne_status:
+       friendly_name: 'Подсветка на кухне'
+       value_template: '{{ states("light.podsvetka_na_kukhne") }}'
+       icon_template: mdi:string-lights
+       
+       
+       

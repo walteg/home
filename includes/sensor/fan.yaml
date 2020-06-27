@@ -1,8 +1,62 @@
-#   - platform: template 
-#     sensors: 
-#       fan.humidifier: 
-#         value_template: "{{ state_attr('fan.humidifier', 'temperature')}}" 
-#         unit_of_measurement: '%' 
-#         entity_id: fan.humidifier 
-#         device_class: temperature 
-#         friendly_name: 'Увлажнитель' 
+  - platform: template 
+    sensors: 
+      fan_humidifier_temperature: 
+        value_template: "{{ state_attr('fan.humidifier', 'temperature')}}" 
+        unit_of_measurement: '°C' 
+        entity_id: fan.humidifier 
+        device_class: temperature 
+        friendly_name: 'Температура увлажнителя' 
+
+  - platform: template 
+    sensors: 
+      fan_humidifier_humidity: 
+        value_template: "{{ state_attr('fan.humidifier', 'humidity')}}" 
+        unit_of_measurement: '%' 
+        entity_id: fan.humidifier 
+        device_class: humidity 
+        friendly_name: 'Влажность увлажнителя' 
+
+  - platform: template 
+    sensors: 
+      fan_humidifier_speed: 
+        value_template: "{{ state_attr('fan.humidifier', 'speed')}}" 
+        unit_of_measurement: '°C' 
+        entity_id: fan.humidifier 
+        # device_class: speed 
+        friendly_name: 'Скорость увлажнителя'
+        
+  - platform: template 
+    sensors: 
+      fan_humidifier_buzzer: 
+        value_template: "{{ state_attr('fan.humidifier', 'buzzer')}}" 
+        unit_of_measurement: '°C' 
+        entity_id: fan.humidifier 
+        # device_class: buzzer 
+        friendly_name: 'Режим увлажнителя'
+        
+  - platform: template 
+    sensors: 
+      fan_humidifier_no_water: 
+        value_template: "{{ state_attr('fan.humidifier', 'no_water')}}" 
+        unit_of_measurement: '°C' 
+        entity_id: fan.humidifier 
+        # device_class: no_water 
+        friendly_name: 'Вода в увлажнителе'
+        
+  - platform: template 
+    sensors: 
+      fan_humidifier_water_tank_detached: 
+        value_template: "{{ state_attr('fan.humidifier', 'water_tank_detached')}}" 
+        unit_of_measurement: '°C' 
+        entity_id: fan.humidifier 
+        # device_class: water_tank_detached 
+        friendly_name: 'Снаят бак с водой'
+        
+  - platform: template 
+    sensors: 
+      fan_humidifier_speed_list: 
+        value_template: "{{ state_attr('fan.humidifier', 'speed_list')}}" 
+        unit_of_measurement: '°C' 
+        entity_id: fan.humidifier 
+        # device_class: speed_list 
+        friendly_name: 'Режим увлажнителя'

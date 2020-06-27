@@ -1,0 +1,4 @@
+  - platform: gismeteo
+  
+#   - platform: yandex_weathe
+#     api_key: !secret api_key_weather

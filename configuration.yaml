@@ -2,11 +2,11 @@
 # Configure a default setup of Home Assistant (frontend, api, etc)
 default_config:
 
+homeassistant:
+   customize: !include includes/customize.yaml
+   
 frontend: 
   themes: !include_dir_merge_named themes 
-
-weather:
-  - platform: gismeteo
 
 #Конфиги вынесены отдельно
 group: !include includes/groups.yaml
@@ -15,6 +15,8 @@ script: !include includes/scripts.yaml
 scene: !include includes/scenes.yaml
 yeelight: !include includes/yeelight.yaml 
 tts: !include includes/tts.yaml
+weather: !include includes/weather.yaml
+
 
 #Отдельные папки с конфигами
 sensor: !include_dir_merge_list includes/sensor 
@@ -52,8 +54,7 @@ yandex_station:
 #================TEST===============
 
 # weather:
-#   - platform: yandex_weathe
-#     api_key: !secret api_key_weather
+
 
 # device_tracker:
 #   - platform: bluetooth_tracker

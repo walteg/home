@@ -181,16 +181,16 @@
 ##====================Голосовое оповещение=========================
 
 #Проверка отправки голоса
-- alias: Увлажнитель включен
-  initial_state: true 
-  trigger: 
-    - platform: state 
-      entity_id: fan.humidifier 
-      to: 'on' 
-  action: 
-    - service: tts.yandex_station_say 
-      data_template:
-        message: Увлажнитель включен
+# - alias: Увлажнитель включен
+#   initial_state: true 
+#   trigger: 
+#     - platform: state 
+#       entity_id: fan.humidifier 
+#       to: 'on' 
+#   action: 
+#     - service: tts.yandex_station_say 
+#       data_template:
+#         message: Увлажнитель включен
 
 #====================TEST========================= 
 
