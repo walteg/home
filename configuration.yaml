@@ -8,16 +8,13 @@ frontend:
 weather:
   - platform: gismeteo
 
-# Text to speech
-tts:
-  - platform: google_translate
-  
 #Конфиги вынесены отдельно
 group: !include includes/groups.yaml
 automation: !include includes/automations.yaml
 script: !include includes/scripts.yaml
 scene: !include includes/scenes.yaml
 yeelight: !include includes/yeelight.yaml 
+tts: !include includes/tts.yaml
 
 #Отдельные папки с конфигами
 sensor: !include_dir_merge_list includes/sensor 
@@ -56,7 +53,7 @@ yandex_station:
 
 # weather:
 #   - platform: yandex_weathe
-#     api_key: 11ab5a9d-a29a-494b-bcd3-a5bd7c63f538
+#     api_key: !secret api_key_weather
 
 # device_tracker:
 #   - platform: bluetooth_tracker
