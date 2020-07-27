@@ -11,7 +11,7 @@ frontend:
 #Конфиги вынесены отдельно
 group: !include includes/groups.yaml
 automation: !include includes/automations.yaml
-script: !include includes/scripts.yaml
+# script: !include includes/scripts.yaml
 scene: !include includes/scenes.yaml
 yeelight: !include includes/yeelight.yaml 
 tts: !include includes/tts.yaml
@@ -20,14 +20,9 @@ weather: !include includes/weather.yaml
 
 #Отдельные папки с конфигами
 sensor: !include_dir_merge_list includes/sensor 
+script: !include_dir_merge_named includes/scripts
+shell_command: !include_dir_merge_named includes/shell_commands
 
-xiaomi_aqara: 
-    discovery_retry: 10 
-    gateways: 
-    - mac: 04:CF:8C:98:1F:D5 
-      key: !secret key_xiaomi_gw 
-      host: 192.168.103.2
-      
 hacs: 
     token: !secret HACS_github
     appdaemon: true 
@@ -49,12 +44,66 @@ fan:
 yandex_station:
   username: !secret username_yandex
   password: !secret password_yandex 
- 
+  devices:
+    04107884c9145420064f:  # device_id вашей колонки
+      host: 192.168.100.11
+      name: Большая колонка  # имя можно задать и тут
+
+
+# yandex_smart_home:
+#   filter:
+#      include_domains:
+#     #   - climate
+#       - switch
+#       - light
+#       - fan
+# #       - cover
+#       - input_boolean
+#       - sensor
+#       - media_player
+
+# yandex_smart_home:
+#   filter:
+#     include_domains:
+#       - switch
+#       - light
+#     exclude_entities:
+#       - light.lampa_v_komnate
+#   entity_config:
+#     switch.kitchen:
+#       name: YANDEX_SMART_HOME
+#     light.living_room:
+#       room: 1
+#     fan.xiaomi_miio_device:
+#       name: "Увлажнитель"
+#       room: 2
+#       type: devices.types.humidifier
+#       properties:
+#         - type: temperature
+#           entity: sensor.fan_humidifier_temperature
+#         - type: humidity
+#           attribute: humidity
+#         - type: water_level
+#           attribute: depth
+
+camera:
+  - platform: local_file
+    file_path: /config/www/snapshot_beward.jpeg
+
+# media_player:
+#   # Use the Python ADB implementation
+#   - platform: androidtv
+#     name: IsBox
+#     host: 192.168.103.9
+#     adb_server_ip: 192.168.103.3
+#     adb_server_port: 5037
+    
+    
+# miio_gateway:
+#   host: 192.168.103.9
+#   port: 54321
 
 #================TEST===============
-
-# weather:
-
 
 # device_tracker:
 #   - platform: bluetooth_tracker
