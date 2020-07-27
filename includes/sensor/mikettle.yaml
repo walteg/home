@@ -1,0 +1,14 @@
+#   - platform: mikettle
+#     mac: 'B8:7C:6F:46:41:2E'
+#     product_id: 275
+#     monitored_conditions:
+#       - action
+#       - mode
+#       - set temperature
+#       - current temperature
+#       - keep warm type
+#       - keep warm time
+      
+      
+# #sensor.mi_kettle_current_temperature - текущая температура
+# #sensor.mi_kettle_set_temperature - до какой нагревать

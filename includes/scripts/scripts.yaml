@@ -1,0 +1,61 @@
+#=========================BUTTON=========================
+alarm_arm_away: 
+  alias: Включить сигналку 
+  sequence: 
+    - service: alarm_control_panel.alarm_arm_away 
+      entity_id: alarm_control_panel.xiaomi_gateway_alarm 
+
+alarm_arm_disarm: 
+  alias: Включить сигналку 
+  sequence: 
+    - service: alarm_control_panel.alarm_disarm 
+      entity_id: alarm_control_panel.xiaomi_gateway_alarm 
+      
+beward_open: 
+  alias: Открыть домофон 
+  sequence: 
+    - service: shell_command.beward_open 
+
+#=========================CHECK=========================
+check_lampa_v_komnate: 
+  alias: Выключить свет 
+  sequence: 
+    - service: light.turn_off 
+      entity_id: light.lampa_v_komnate 
+      
+check_podsvetka_v_komnate: 
+  alias: Выключить свет 
+  sequence: 
+    - service: light.turn_off 
+      entity_id: light.podsvetka_v_komnate
+      
+check_switch_v_koridore: 
+  alias: Выключить свет 
+  sequence: 
+    - service: switch.turn_off 
+      entity_id: switch.sonoff_100076e305 
+      
+check_podsvetka_v_koridore: 
+  alias: Выключить свет 
+  sequence: 
+    - service: light.turn_off 
+      entity_id: light.gateway_light_04cf8c981fd5 
+      
+check_podsvetka_na_kukhne: 
+  alias: Выключить свет 
+  sequence: 
+    - service: light.turn_off 
+      entity_id: light.podsvetka_na_kukhne
+      
+check_humidifier: 
+  alias: Выключить увлажнитель 
+  sequence: 
+    - service: fan.turn_off 
+      entity_id: fan.humidifier
+
+#=========================TEST=========================
+# outdoor_temperature:
+#   sequence:
+#     - service: notify.notify
+#       data_template:
+#         message: Температура на улице {{ state_attr('weather.gismeteo', 'humidity') }}

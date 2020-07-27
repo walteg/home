@@ -22,7 +22,7 @@
  - platform: template
    sensors:
      sonoff_100076e305_status:
-       friendly_name: 'Подсветка в коридоре'
+       friendly_name: 'Свет в коридоре'
        value_template: '{{ states("switch.sonoff_100076e305") }}'
        icon_template: mdi:flash
        

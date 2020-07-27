@@ -33,7 +33,12 @@
         unit_of_measurement: 'm/s' 
         entity_id: weather.gismeteo 
         # device_class: wind
+        friendly_name: 'скорость ветра'
         
   - platform: gismeteo
     monitored_conditions:
       - weather
+      - storm
+      - rain
+      - snow
+      

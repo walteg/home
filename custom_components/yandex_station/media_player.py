@@ -53,12 +53,20 @@ CUSTOM_ICONS = {
 
 # noinspection PyUnusedLocal
 def setup_platform(hass, config, add_entities, discovery_info=None):
-    if isinstance(discovery_info, dict):
-        quasar = hass.data[DOMAIN]
-        if discovery_info.get('hdmi'):
-            add_entities([YandexStationHDMI(quasar, discovery_info)])
-        else:
-            add_entities([YandexStation(quasar, discovery_info)])
+    if isinstance(discovery_info, str):
+        device = next(d for d in hass.data[DOMAIN]['devices']
+                      if d['device_id'] == discovery_info)
+
+        if 'entity' in device:
+            return
+
+        quasar = hass.data[DOMAIN]['quasar']
+
+        device['entity'] = entity = YandexStationHDMI(quasar, device) \
+            if device['platform'] == 'yandexstation' \
+            else YandexStation(quasar, device)
+        add_entities([entity])
+
     else:
         add_entities([YandexIntents(discovery_info)])
 
@@ -72,9 +80,6 @@ class YandexStation(MediaPlayerEntity, Glagol):
     # кастомная иконка
     _icon = None
 
-    # локальное состояние
-    local_state: Optional[dict] = None
-
     # экстра есть только в локальном режиме
     local_extra: Optional[dict] = None
     # время обновления состояния (для ползунка), есть только в локальном режиме
@@ -84,8 +89,11 @@ class YandexStation(MediaPlayerEntity, Glagol):
 
     # облачное состояние, должно быть null, когда появляется локальное
     cloud_state = STATE_IDLE
-    # облачный звук, должен быть null, когда появляется локальное подключение
+    # облачный звук
     cloud_volume = .5
+
+    # ожидание тектового ответа от станции
+    wait_text_response = False
 
     async def async_added_to_hass(self) -> None:
         # TODO: проверить смену имени!!!
@@ -99,11 +107,8 @@ class YandexStation(MediaPlayerEntity, Glagol):
             await self.init_local_mode()
 
     async def init_local_mode(self):
-        if not self.hass or self.device.get('mode') == 'local':
+        if not self.hass:
             return
-
-        # mode=local не даёт два раза создать локальное подключение
-        self.device['mode'] = 'local'
 
         session = async_get_clientsession(self.hass)
         asyncio.create_task(self.local_start(session))
@@ -141,7 +146,8 @@ class YandexStation(MediaPlayerEntity, Glagol):
 
     @property
     def volume_level(self):
-        if self.local_state:
+        # в прошивке Яндекс.Станции Мини есть косяк - звук всегда (int) 0
+        if self.local_state and isinstance(self.local_state['volume'], float):
             return self.local_state['volume']
         else:
             return self.cloud_volume
@@ -189,7 +195,7 @@ class YandexStation(MediaPlayerEntity, Glagol):
     def media_image_url(self):
         # local mode checked in media_content_type
         if (self.media_content_type == 'music' and
-                'ogImage' in self.local_extra):
+                self.local_extra.get('ogImage')):
             url = self.local_extra['ogImage'].replace('%%', '400x400')
             return 'https://' + url
 
@@ -265,8 +271,11 @@ class YandexStation(MediaPlayerEntity, Glagol):
         await self.async_set_volume_level(volume)
 
     async def async_set_volume_level(self, volume):
-        # у станции округление громкости до десятых
+        # громкость пригодится для Яндекс.Станции Мини в локальном режиме
+        self.cloud_volume = volume
+
         if self.local_state:
+            # у станции округление громкости до десятых
             await self.send_to_station({
                 'command': 'setVolume',
                 'volume': round(volume, 1)
@@ -275,7 +284,6 @@ class YandexStation(MediaPlayerEntity, Glagol):
         else:
             command = f"громкость на {round(10 * volume)}"
             await self.quasar.send(self.device, command)
-            self.cloud_volume = volume
             self.async_schedule_update_ha_state()
 
     async def async_media_seek(self, position):
@@ -361,13 +369,31 @@ class YandexStation(MediaPlayerEntity, Glagol):
 
         self.async_schedule_update_ha_state()
 
+    async def response(self, text: str):
+        _LOGGER.debug(f"{self.name} | {text}")
+
+        if self.wait_text_response:
+            self.wait_text_response = False
+            await self.hass.bus.async_fire(f"{DOMAIN}_response", {
+                'entity_id': self.entity_id,
+                'name': self.name,
+                'text': text
+            })
+
     async def async_play_media(self, media_type: str, media_id: str, **kwargs):
         if media_type == 'tts':
             media_type = 'text' if self.sound_mode == SOUND_MODE1 \
                 else 'command'
 
         if self.local_state:
-            if media_type == 'text':
+            if 'https://' in media_id or 'http://' in media_id:
+                session = async_get_clientsession(self.hass)
+                payload = await utils.get_media_payload(media_id, session)
+                if not payload:
+                    _LOGGER.warning(f"Unsupported url: {media_id}")
+                    return
+
+            elif media_type == 'text':
                 # даже в локальном режиме делам TTS через облако, чтоб колонка
                 # не продолжала слушать
                 if self.quasar.main_token:
@@ -382,6 +408,10 @@ class YandexStation(MediaPlayerEntity, Glagol):
 
             elif media_type == 'command':
                 payload = {'command': 'sendText', 'text': media_id}
+
+            elif media_type == 'question':
+                payload = {'command': 'sendText', 'text': media_id}
+                self.wait_text_response = True
 
             elif media_type == 'dialog':
                 payload = utils.update_form(

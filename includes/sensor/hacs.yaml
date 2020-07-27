@@ -1,0 +1,13 @@
+  - platform: template
+    sensors:
+      hacs_update:
+         friendly_name: 'Обновления HACS'
+         value_template: '{{ states("sensor.hacs") }}'
+         icon_template: mdi:cellphone-arrow-down
+         
+  - platform: template
+    sensors:
+      superviser_update:
+         friendly_name: 'Обновления superviser'
+         value_template: "{{ state_attr('binary_sensor.updater', 'newest_version') }}"
+         icon_template: mdi:cellphone-arrow-down

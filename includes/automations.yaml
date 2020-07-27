@@ -1,5 +1,4 @@
-##====================Действия========================= 
-
+##=========================Действия========================= 
 #Включить свет на кухне от движения 
 - alias: Движение на кухне 
   initial_state: true 
@@ -11,6 +10,18 @@
   action: 
     - service: light.turn_on 
       entity_id: light.podsvetka_na_kukhne 
+  
+#Включить свет в коридоре от движения 
+- alias: Движение в коридоре
+  initial_state: true 
+  trigger: 
+    - platform: event 
+      event_type: xiaomi_aqara.motion 
+      event_data: 
+        entity_id: binary_sensor.motion_sensor_158d0003950d16 
+  action: 
+    - service: switch.turn_on 
+      entity_id: switch.sonoff_100076e305 
 
 #Выключить свет на кухне, если нет движения более 3х минут 
 - alias: Не движения на кухне 
@@ -39,6 +50,21 @@
   action: 
     - service: switch.turn_on 
       entity_id: switch.sonoff_100076e305 
+      
+#Включить свет в комнате при открытие двери 
+- alias: Свет в комнате 
+  initial_state: true 
+  trigger: 
+    - platform: state 
+      entity_id: binary_sensor.door_window_sensor_158d00039522c2 
+      to: 'on' 
+  condition: 
+    - condition: state 
+      entity_id: alarm_control_panel.xiaomi_gateway_alarm 
+      state: disarmed 
+  action: 
+    - service: light.turn_on 
+      entity_id: light.lampa_v_komnate 
 
 #Выключить свет в коридоре, если дверь закрыта более 3х минут 
 - alias: Выключить свет в коридоре sonoff 
@@ -49,6 +75,17 @@
       to: 'off' 
       for: 
         minutes: 2 
+  action: 
+    - service: switch.turn_off 
+      entity_id: switch.sonoff_100076e305 
+      
+#Выключить свет в коридоре, если движения нет более 3х минут 
+- alias: Не движения в коридоре 
+  initial_state: true 
+  trigger: 
+    - platform: state 
+      entity_id: binary_sensor.motion_sensor_158d0003950d16 
+      to: 'off' 
   action: 
     - service: switch.turn_off 
       entity_id: switch.sonoff_100076e305 
@@ -128,25 +165,39 @@
   action: 
     - service: script.alarm_arm_disarm 
       entity_id: alarm_control_panel.xiaomi_gateway_alarm
-
-##====================PUSH Оповещение=========================
-
-#Push при движение на кухне 
-- alias: Движение на кухне 
+      
+#Включить музыку, если телефон подключился к wi-fi
+- alias: Телефон дома 
   initial_state: true 
   trigger: 
-    - platform: event 
-      event_type: xiaomi_aqara.motion 
-      event_data: 
-        entity_id: binary_sensor.motion_sensor_158d00032c827f 
-  condition: 
-    - condition: state 
-      entity_id: alarm_control_panel.xiaomi_gateway_alarm 
-      state: armed_away 
+    - platform: state 
+      entity_id: sensor.iphone_walteg_ssid
+      to: 'Walteg' 
   action: 
-    - service: notify.notify 
-      data_template:
-        message: Замечено движение на кухне
+    - service: media_player.play_media 
+      entity_id: media_player.yandex_station_04107884c9145420064f
+      data:
+        media_content_id: Включи рок
+        media_content_type: command
+      
+# ##=========================PUSH Оповещение=========================
+
+# #Push при движение на кухне 
+# - alias: Движение на кухне 
+#   initial_state: true 
+#   trigger: 
+#     - platform: event 
+#       event_type: xiaomi_aqara.motion 
+#       event_data: 
+#         entity_id: binary_sensor.motion_sensor_158d00032c827f 
+#   condition: 
+#     - condition: state 
+#       entity_id: alarm_control_panel.xiaomi_gateway_alarm 
+#       state: armed_away 
+#   action: 
+#     - service: notify.notify 
+#       data_template:
+#         message: Замечено движение на кухне
 
 #Push при открытие двери
 - alias: Дверь открыта 
@@ -178,7 +229,14 @@
 
 
 
-##====================Голосовое оповещение=========================
+
+
+
+
+
+
+
+##=========================Голосовое оповещение=========================
 
 #Проверка отправки голоса
 # - alias: Увлажнитель включен
@@ -193,6 +251,8 @@
 #         message: Увлажнитель включен
 
 #====================TEST========================= 
+
+
 
 #Включить подсветку шлюза, если освещение ниже 600 lx
 # - alias: night light enable 
@@ -215,3 +275,51 @@
 #   action: 
 #     - service: light.turn_off 
 #       entity_id: light.gateway_light_04cf8cb8810e 
+
+#====================#====================#====================#====================
+# - alias: away home
+#   initial_state: true
+#   trigger:
+#     platform: event
+#     event_type: ifttt_webhook_received
+#     event_data:
+#       action: call_service
+#   condition: 
+#     - condition: state 
+#       entity_id: person.aleksei
+#       state: not_home
+#     - condition: state 
+#       entity_id: person.aleksei
+#       state: not_home
+#   action: 
+#     - service: script.alarm_arm_away 
+#       entity_id: alarm_control_panel.xiaomi_gateway_alarm
+#====================#====================#====================#====================    
+
+    
+    
+# - alias: 222 
+#   initial_state: true 
+#   trigger: 
+#     - platform: state 
+#       entity_id: light.podsvetka_v_komnate, light.lampa_v_komnate
+#       to: 'on'
+#   action: 
+#     - service: script.alarm_arm_away 
+#       entity_id: alarm_control_panel.xiaomi_gateway_alarm
+      
+# - alias: 222 
+#   initial_state: true 
+#   condition:
+#     condition: and
+#     conditions:
+#       - condition: state
+#         entity_id: light.podsvetka_v_komnate, light.lampa_v_komnate
+#         state: 'on'
+#   action: 
+#     - service: script.alarm_arm_away 
+#       entity_id: alarm_control_panel.xiaomi_gateway_alarm
+      
+      
+      
+      

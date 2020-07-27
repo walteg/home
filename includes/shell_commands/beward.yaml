@@ -1,0 +1,1 @@
+beward_open: 'curl -H "Authorization: Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJ0ZC1jcm0iLCJhdWQiOiJ0ZC1jcm0iLCJpYXQiOjE1OTQ3MTk4MzgsImV4cCI6MTYwMjQ5NTgzOCwic3ViIjoiMTAyOSJ9.r9i4RNCrBvil3XrHYJPTwJOt0kfwqH3QWhGJJvY1r8U" http://td-crm.is74.ru/api/open/18:68:82:30:98:03/1'

@@ -5,7 +5,34 @@
         unit_of_measurement: '%' 
         entity_id: binary_sensor.door_window_sensor_158d00039522c2 
         device_class: battery 
-        friendly_name: 'Геркон' 
+        friendly_name: 'Геркон (коридор)' 
+
+  - platform: template 
+    sensors: 
+      158d0003d31e56_battery: 
+        value_template: "{{ state_attr('binary_sensor.door_window_sensor_158d0003d31e56', 'battery_level')}}" 
+        unit_of_measurement: '%' 
+        entity_id: binary_sensor.door_window_sensor_158d0003d31e56 
+        device_class: battery 
+        friendly_name: 'Геркон (кухня)' 
+
+  - platform: template 
+    sensors: 
+      158d0003d31e5b_battery: 
+        value_template: "{{ state_attr('binary_sensor.door_window_sensor_158d0003d31e5b', 'battery_level')}}" 
+        unit_of_measurement: '%' 
+        entity_id: binary_sensor.door_window_sensor_158d0003d31e5b 
+        device_class: battery 
+        friendly_name: 'Геркон (балкон)'
+    
+  - platform: template 
+    sensors: 
+      158d0003950d16_battery: 
+        value_template: "{{ state_attr('binary_sensor.motion_sensor_158d0003950d16', 'battery_level')}}" 
+        unit_of_measurement: '%' 
+        entity_id: binary_sensor.motion_sensor_158d0003950d16 
+        device_class: battery 
+        friendly_name: 'Движение (коридор)' 
         
   - platform: template 
     sensors: 
@@ -14,7 +41,16 @@
         unit_of_measurement: '%' 
         entity_id: binary_sensor.motion_sensor_158d00032c827f 
         device_class: battery 
-        friendly_name: 'Датчика движения' 
+        friendly_name: 'Движение (кухня)' 
+    
+  - platform: template 
+    sensors: 
+      158d0003950e82_battery: 
+        value_template: "{{ state_attr('binary_sensor.motion_sensor_158d0003950e82', 'battery_level')}}" 
+        unit_of_measurement: '%' 
+        entity_id: binary_sensor.motion_sensor_158d0003950e82 
+        device_class: battery 
+        friendly_name: 'Движение (комната)'
     
   - platform: template 
     sensors: 
@@ -34,5 +70,12 @@
         device_class: battery 
         friendly_name: 'Общий датчик' 
         
-        
+  - platform: template 
+    sensors: 
+      158d000398c1e5_battery: 
+        value_template: "{{ state_attr('binary_sensor.switch_158d000398c1e5', 'battery_level')}}" 
+        unit_of_measurement: '%' 
+        entity_id: binary_sensor.switch_158d000398c1e5 
+        device_class: battery 
+        friendly_name: 'Кнопка'
 
