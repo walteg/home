@@ -59,3 +59,26 @@ check_humidifier:
 #     - service: notify.notify
 #       data_template:
 #         message: Температура на улице {{ state_attr('weather.gismeteo', 'humidity') }}
+
+
+#   alias: Проверь интернет
+#   description: ''
+#   trigger:
+#   - event_data:
+#       text: Проверь интернет
+#     event_type: yandex_intent
+#     platform: event
+#   condition: []
+#   action:
+#   - service: tts.alice_say
+#     entity_id: media_player.yandex_station_xxxxxx
+#     data_template:
+#       message: Скорость интернета "{{ states('sensor.speedtest_download') }}"
+      
+check_temp:
+  alias: Температура в комнате
+  sequence:
+    - service: tts.yandex_station_say
+      entity_id: media_player.yandex_station_04107884c9145420064f
+      data_template:
+        message: Температура в комнате "{{ states('sensor.fan_humidifier_temperature') }}" градуса

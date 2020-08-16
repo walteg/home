@@ -2,3 +2,6 @@
 
 #   - platform: yandex_weathe
 #     api_key: !secret api_key_weather
+
+#   - platform: Yandex_Weather
+#     api_key: 4cf8263a-8e30-4347-b39b-ace6fec4a9dc

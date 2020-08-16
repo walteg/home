@@ -302,23 +302,37 @@ class PauseCapability(_ToggleCapability):
     @staticmethod
     def supported(domain, features, entity_config, attributes):
         """Test if state is supported."""
-        return domain == media_player.DOMAIN \
-            and features & media_player.SUPPORT_PAUSE \
-            and features & media_player.SUPPORT_PLAY
+        if domain == media_player.DOMAIN:
+            return features & media_player.SUPPORT_PAUSE and features & media_player.SUPPORT_PLAY
+        elif domain == vacuum.DOMAIN:
+            return features & vacuum.SUPPORT_PAUSE
+        return False
 
     def get_value(self):
         """Return the state value of this capability for this entity."""
-        return bool(self.state.state != media_player.STATE_PLAYING)
+        if self.state.domain == media_player.DOMAIN:
+            return bool(self.state.state != media_player.STATE_PLAYING)
+        elif self.state.domain == vacuum.DOMAIN:
+            return self.state.state == vacuum.STATE_PAUSED
+        return None
 
     async def set_state(self, data, state):
         """Set device state."""
         if type(state['value']) is not bool:
             raise SmartHomeError(ERR_INVALID_VALUE, "Value is not boolean")
 
-        if state['value']:
-            service = media_player.SERVICE_MEDIA_PAUSE
+        if self.state.domain == media_player.DOMAIN:
+            if state['value']:
+                service = media_player.SERVICE_MEDIA_PAUSE
+            else:
+                service = media_player.SERVICE_MEDIA_PLAY
+        elif self.state.domain == vacuum.DOMAIN:
+            if state['value']:
+                service = vacuum.SERVICE_PAUSE
+            else:
+                service = vacuum.SERVICE_START
         else:
-            service = media_player.SERVICE_MEDIA_PLAY
+            raise SmartHomeError(ERR_INVALID_VALUE, "Unsupported domain")
 
         await self.hass.services.async_call(
             self.state.domain,
@@ -379,6 +393,11 @@ class ThermostatCapability(_ModeCapability):
         """Return the state value of this capability for this entity."""
         operation = self.state.attributes.get(climate.ATTR_HVAC_MODE)
 
+        if operation is not None and operation in self.climate_map:
+            return self.climate_map[operation]
+        
+        # Try to take current mode from device state
+        operation = self.state.state
         if operation is not None and operation in self.climate_map:
             return self.climate_map[operation]
 
@@ -614,19 +633,22 @@ class TemperatureCapability(_RangeCapability):
         if self.state.domain == water_heater.DOMAIN:
             min_temp = self.state.attributes.get(water_heater.ATTR_MIN_TEMP)
             max_temp = self.state.attributes.get(water_heater.ATTR_MAX_TEMP)
+            precision = self.state.attributes.get(water_heater.ATTR_TARGET_TEMP_STEP, 0.5)
         elif self.state.domain == climate.DOMAIN:
             min_temp = self.state.attributes.get(climate.ATTR_MIN_TEMP)
             max_temp = self.state.attributes.get(climate.ATTR_MAX_TEMP)
+            precision = self.state.attributes.get(climate.ATTR_TARGET_TEMP_STEP, 0.5)
         else:
             min_temp = 0
             max_temp = 100
+            precision = 0.5
         return {
             'instance': self.instance,
             'unit': 'unit.temperature.celsius',
             'range': {
                 'min': min_temp,
                 'max': max_temp,
-                'precision': 0.5
+                'precision': precision
             }
         }
 
@@ -964,4 +986,98 @@ class TemperatureKCapability(_ColorSettingCapability):
             light.SERVICE_TURN_ON, {
                 ATTR_ENTITY_ID: self.state.entity_id,
                 light.ATTR_KELVIN: state['value']
+            }, blocking=True, context=data.context)
+
+
+@register_capability
+class CleanupModeCapability(_ModeCapability):
+    """Vacuum cleanup mode functionality."""
+
+    instance = 'cleanup_mode'
+
+    values = {
+        'auto': {'auto'},
+        'min': {'mop'},
+        'quiet': {'low', 'min'},
+        'normal': {'medium', 'middle'},
+        'turbo': {'high', 'turbo'},
+        'max': {'max', 'strong'},
+    }
+
+    @staticmethod
+    def supported(domain, features, entity_config, attributes):
+        """Test if state is supported."""
+        if domain == vacuum.DOMAIN:
+            return features & vacuum.SUPPORT_FAN_SPEED
+        return False
+
+    def parameters(self):
+        """Return parameters for a devices request."""
+        if self.state.domain == vacuum.DOMAIN:
+            speed_list = self.state.attributes.get(vacuum.ATTR_FAN_SPEED_LIST)
+        else:
+            speed_list = []
+
+        speeds = []
+        added = set()
+        for ha_value in speed_list:
+            value = self.get_yandex_value_by_ha_value(ha_value)
+            if value is not None and value not in added:
+                speeds.append({'value': value})
+                added.add(value)
+
+        return {
+            'instance': self.instance,
+            'modes': speeds
+        }
+
+    def get_yandex_value_by_ha_value(self, ha_value):
+        for yandex_value, names in self.values.items():
+            if ha_value.lower() in names:
+                return yandex_value
+        return None
+
+    def get_ha_by_yandex_value(self, yandex_value):
+        if self.state.domain == vacuum.DOMAIN:
+            instance_speeds = set(self.state.attributes.get(vacuum.ATTR_FAN_SPEED_LIST))
+        else:
+            instance_speeds = {}
+
+        known_speeds = self.values.get(yandex_value, set())
+
+        # Find first intersection of known modes and actual modes:
+        return next(iter(instance_speeds & known_speeds), None)
+
+    def get_value(self):
+        """Return the state value of this capability for this entity."""
+        if self.state.domain == vacuum.DOMAIN:
+            ha_value = self.state.attributes.get(vacuum.ATTR_FAN_SPEED)
+        else:
+            ha_value = None
+
+        if ha_value is not None:
+            yandex_value = self.get_yandex_value_by_ha_value(ha_value)
+            if yandex_value is not None:
+                return yandex_value
+
+        return 'auto'
+
+    async def set_state(self, data, state):
+        """Set device state."""
+        value = self.get_ha_by_yandex_value(state['value'])
+
+        if value is None:
+            raise SmartHomeError(ERR_INVALID_VALUE, "Unsupported value")
+
+        if self.state.domain == vacuum.DOMAIN:
+            service = vacuum.SERVICE_SET_FAN_SPEED
+            attr = vacuum.ATTR_FAN_SPEED
+        else:
+            raise SmartHomeError(ERR_INVALID_VALUE, "Unsupported domain")
+
+        await self.hass.services.async_call(
+            self.state.domain,
+            service, {
+                ATTR_ENTITY_ID: self.state.entity_id,
+                attr: value
             }, blocking=True, context=data.context)

@@ -320,6 +320,35 @@
 #     - service: script.alarm_arm_away 
 #       entity_id: alarm_control_panel.xiaomi_gateway_alarm
       
+#Включить сигналку, если ble сигнал больше -50 dB 
+# - alias: браслет не дома 
+#   initial_state: true 
+#   trigger: 
+#     - platform: numeric_state 
+#       entity_id: sensor.hey_rssi
+#       below: '-60' 
+#   action: 
+#     - service: script.alarm_arm_away 
+#       entity_id: alarm_control_panel.xiaomi_gateway_alarm 
       
+# #Включить сигналку, если ble сигнал потерян
+# - alias: браслет не дома 
+#   initial_state: true 
+#   trigger: 
+#     - platform: state 
+#       entity_id: sensor.hey_rssi
+#       to: 'unknown' 
+#   action: 
+#     - service: script.alarm_arm_away 
+#       entity_id: alarm_control_panel.xiaomi_gateway_alarm  
       
-      
+# #Выключить сигналку, если ble сигнал меньше -40 dB 
+# - alias: браслет не дома 
+#   initial_state: true 
+#   trigger: 
+#     - platform: numeric_state 
+#       entity_id: sensor.hey_rssi
+#       above: '-70' 
+#   action: 
+#     - service: script.alarm_arm_disarm 
+#       entity_id: alarm_control_panel.xiaomi_gateway_alarm

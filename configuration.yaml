@@ -50,41 +50,7 @@ yandex_station:
       name: Большая колонка  # имя можно задать и тут
 
 
-# yandex_smart_home:
-#   filter:
-#      include_domains:
-#     #   - climate
-#       - switch
-#       - light
-#       - fan
-# #       - cover
-#       - input_boolean
-#       - sensor
-#       - media_player
-
-# yandex_smart_home:
-#   filter:
-#     include_domains:
-#       - switch
-#       - light
-#     exclude_entities:
-#       - light.lampa_v_komnate
-#   entity_config:
-#     switch.kitchen:
-#       name: YANDEX_SMART_HOME
-#     light.living_room:
-#       room: 1
-#     fan.xiaomi_miio_device:
-#       name: "Увлажнитель"
-#       room: 2
-#       type: devices.types.humidifier
-#       properties:
-#         - type: temperature
-#           entity: sensor.fan_humidifier_temperature
-#         - type: humidity
-#           attribute: humidity
-#         - type: water_level
-#           attribute: depth
+yandex_smart_home:
 
 camera:
   - platform: local_file

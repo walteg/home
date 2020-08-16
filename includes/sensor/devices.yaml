@@ -40,5 +40,8 @@
        value_template: '{{ states("light.podsvetka_na_kukhne") }}'
        icon_template: mdi:string-lights
        
-       
-       
+ - platform: integration
+   source: sensor.current_power
+   name: energy_spent
+   unit_prefix: k
+   round: 2
