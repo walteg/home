@@ -9,7 +9,7 @@
         entity_id: binary_sensor.motion_sensor_158d00032c827f 
   action: 
     - service: light.turn_on 
-      entity_id: light.podsvetka_na_kukhne 
+      entity_id: light.kukhnia 
   
 #Включить свет в коридоре от движения 
 - alias: Движение в коридоре
@@ -34,7 +34,7 @@
         minutes: 1 
   action: 
     - service: light.turn_off 
-      entity_id: light.podsvetka_na_kukhne 
+      entity_id: light.kukhnia 
 
 #Включить свет в коридоре при открытие двери 
 - alias: Свет в коридоре sonoff 
@@ -51,20 +51,20 @@
     - service: switch.turn_on 
       entity_id: switch.sonoff_100076e305 
       
-#Включить свет в комнате при открытие двери 
-- alias: Свет в комнате 
-  initial_state: true 
-  trigger: 
-    - platform: state 
-      entity_id: binary_sensor.door_window_sensor_158d00039522c2 
-      to: 'on' 
-  condition: 
-    - condition: state 
-      entity_id: alarm_control_panel.xiaomi_gateway_alarm 
-      state: disarmed 
-  action: 
-    - service: light.turn_on 
-      entity_id: light.lampa_v_komnate 
+# #Включить свет в комнате при открытие двери 
+# - alias: Свет в комнате 
+#   initial_state: true 
+#   trigger: 
+#     - platform: state 
+#       entity_id: binary_sensor.door_window_sensor_158d00039522c2 
+#       to: 'on' 
+#   condition: 
+#     - condition: state 
+#       entity_id: alarm_control_panel.xiaomi_gateway_alarm 
+#       state: disarmed 
+#   action: 
+#     - service: light.turn_on 
+#       entity_id: light.komnata 
 
 #Выключить свет в коридоре, если дверь закрыта более 3х минут 
 - alias: Выключить свет в коридоре sonoff 
@@ -155,49 +155,79 @@
     - service: script.alarm_arm_away 
       entity_id: alarm_control_panel.xiaomi_gateway_alarm
 
-#Выключить сигналку, если телефон подключился к wi-fi
-- alias: Телефон дома 
-  initial_state: true 
-  trigger: 
-    - platform: state 
-      entity_id: sensor.iphone_walteg_ssid
-      to: 'Walteg' 
-  action: 
-    - service: script.alarm_arm_disarm 
-      entity_id: alarm_control_panel.xiaomi_gateway_alarm
-      
-#Включить музыку, если телефон подключился к wi-fi
-- alias: Телефон дома 
-  initial_state: true 
-  trigger: 
-    - platform: state 
-      entity_id: sensor.iphone_walteg_ssid
-      to: 'Walteg' 
-  action: 
-    - service: media_player.play_media 
-      entity_id: media_player.yandex_station_04107884c9145420064f
-      data:
-        media_content_id: Включи рок
-        media_content_type: command
-      
-# ##=========================PUSH Оповещение=========================
-
-# #Push при движение на кухне 
-# - alias: Движение на кухне 
+# #Выключить сигналку, если телефон подключился к wi-fi
+# - alias: Телефон дома 
 #   initial_state: true 
 #   trigger: 
-#     - platform: event 
-#       event_type: xiaomi_aqara.motion 
-#       event_data: 
-#         entity_id: binary_sensor.motion_sensor_158d00032c827f 
-#   condition: 
-#     - condition: state 
-#       entity_id: alarm_control_panel.xiaomi_gateway_alarm 
-#       state: armed_away 
+#     - platform: state 
+#       entity_id: sensor.iphone_walteg_ssid
+#       to: 'Walteg' 
 #   action: 
-#     - service: notify.notify 
-#       data_template:
-#         message: Замечено движение на кухне
+#     - service: script.alarm_arm_disarm 
+#       entity_id: alarm_control_panel.xiaomi_gateway_alarm
+      
+# #Включить музыку, если телефон подключился к wi-fi
+# - alias: Телефон дома 
+#   initial_state: true 
+#   trigger: 
+#     - platform: state 
+#       entity_id: sensor.iphone_walteg_ssid
+#       to: 'Walteg' 
+#   action: 
+#     - service: media_player.play_media 
+#       entity_id: media_player.yandex_station_04107884c9145420064f
+#       data:
+#         media_content_id: Включи рок
+#         media_content_type: command
+
+#Открыть домофон + выключить сигналку через МП
+- alias: Я дома
+  initial_state: true
+  trigger:
+    - platform: event
+      event_type: ios.action_fired
+      event_data:
+        actionName: 'im_home'
+  action:
+    service: script.im_home
+    
+#Выключить всё перед сном через МП
+- alias: sleep
+  initial_state: true
+  trigger:
+    - platform: event
+      event_type: ios.action_fired
+      event_data:
+        actionName: 'sleep'
+  action:
+    service: script.sleep
+      
+#Убавить громкость вечером 
+- alias: Убавить громкость
+  initial_state: true 
+  trigger: 
+    - platform: state 
+      entity_id: binary_sensor.noise_allowed 
+      to: 'off' 
+  action: 
+    - service: media_player.volume_set 
+      data:
+          entity_id: media_player.yandex_station_04107884c9145420064f 
+          volume_level: 0.2
+
+#Прибавить громкость утром
+- alias: Прибавить громкость
+  initial_state: true 
+  trigger: 
+    - platform: state 
+      entity_id: binary_sensor.noise_allowed 
+      to: 'on' 
+  action: 
+    - service: media_player.volume_set 
+      data:
+          entity_id: media_player.yandex_station_04107884c9145420064f 
+          volume_level: 0.4
+# ##=========================PUSH Оповещение=========================
 
 #Push при открытие двери
 - alias: Дверь открыта 
@@ -227,13 +257,47 @@
       data_template:
         message: Замечена вода в ванной
 
+##=========================yandex подсветка=========================
+      
+# - trigger:
+#     platform: state
+#     entity_id: sensor.alice_state
+#     to: LISTENING
+#   action:
+#   - service: script.turn_off
+#     entity_id: script.speaking
+#   - service: light.turn_on
+#     entity_id: light.komnata_2
+#     data:
+#       rgb_color: [103, 57, 204]
+#       brightness: 255
+#   - service: script.turn_on
+#     entity_id: script.listening
 
+# - trigger:
+#     platform: state
+#     entity_id: sensor.alice_state
+#     to: SPEAKING
+#   action:
+#   - service: script.turn_off
+#     entity_id: script.listening
+#   - service: light.turn_on
+#     entity_id: light.komnata_2
+#     data:
+#       rgb_color: [103, 57, 204]
+#       brightness: 255
+#   - service: script.turn_on
+#     entity_id: script.speaking
 
-
-
-
-
-
+# - trigger:
+#     platform: state
+#     entity_id: sensor.alice_state
+#     to: IDLE
+#   action:
+#   - service: script.turn_off
+#     entity_id: script.listening, script.speaking
+#   - service: light.turn_off
+#     entity_id: light.komnata_2     
 
 
 ##=========================Голосовое оповещение=========================
@@ -251,8 +315,6 @@
 #         message: Увлажнитель включен
 
 #====================TEST========================= 
-
-
 
 #Включить подсветку шлюза, если освещение ниже 600 lx
 # - alias: night light enable 
@@ -276,28 +338,6 @@
 #     - service: light.turn_off 
 #       entity_id: light.gateway_light_04cf8cb8810e 
 
-#====================#====================#====================#====================
-# - alias: away home
-#   initial_state: true
-#   trigger:
-#     platform: event
-#     event_type: ifttt_webhook_received
-#     event_data:
-#       action: call_service
-#   condition: 
-#     - condition: state 
-#       entity_id: person.aleksei
-#       state: not_home
-#     - condition: state 
-#       entity_id: person.aleksei
-#       state: not_home
-#   action: 
-#     - service: script.alarm_arm_away 
-#       entity_id: alarm_control_panel.xiaomi_gateway_alarm
-#====================#====================#====================#====================    
-
-    
-    
 # - alias: 222 
 #   initial_state: true 
 #   trigger: 
@@ -352,3 +392,34 @@
 #   action: 
 #     - service: script.alarm_arm_disarm 
 #       entity_id: alarm_control_panel.xiaomi_gateway_alarm
+
+
+# - alias: click_light
+#   trigger:
+#     - platform: state
+#       entity_id: binary_sensor.switch_158d000398c1e5
+#       to: "single"
+#   action: 
+#     - service: light.turn_on 
+#       entity_id: light.komnata_2
+      
+      
+# yandex_command_test:
+#   alias: yandex_command_test
+#   sequence:
+#   - service: yandex_station.send_command
+#     data:
+#       entity_id: media_player.yandex_station_04107884c9145420064f
+#       command: sendText
+#       text: поставь будильник на 10 утра
+#       for:
+#         seconds: 1
+#   - service: yandex_station.send_command
+#     data:
+#       entity_id: media_player.yandex_station_04107884c9145420064f
+#       command: sendText
+#       text: громкость 3
+#       for:
+#         seconds: 1
+
+

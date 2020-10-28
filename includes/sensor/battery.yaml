@@ -3,7 +3,7 @@
       158d00039522c2_battery: 
         value_template: "{{ state_attr('binary_sensor.door_window_sensor_158d00039522c2', 'battery_level')}}" 
         unit_of_measurement: '%' 
-        entity_id: binary_sensor.door_window_sensor_158d00039522c2 
+        # entity_id: binary_sensor.door_window_sensor_158d00039522c2 
         device_class: battery 
         friendly_name: 'Геркон (коридор)' 
 
@@ -12,7 +12,7 @@
       158d0003d31e56_battery: 
         value_template: "{{ state_attr('binary_sensor.door_window_sensor_158d0003d31e56', 'battery_level')}}" 
         unit_of_measurement: '%' 
-        entity_id: binary_sensor.door_window_sensor_158d0003d31e56 
+        # entity_id: binary_sensor.door_window_sensor_158d0003d31e56 
         device_class: battery 
         friendly_name: 'Геркон (кухня)' 
 
@@ -21,7 +21,7 @@
       158d0003d31e5b_battery: 
         value_template: "{{ state_attr('binary_sensor.door_window_sensor_158d0003d31e5b', 'battery_level')}}" 
         unit_of_measurement: '%' 
-        entity_id: binary_sensor.door_window_sensor_158d0003d31e5b 
+        # entity_id: binary_sensor.door_window_sensor_158d0003d31e5b 
         device_class: battery 
         friendly_name: 'Геркон (балкон)'
     
@@ -30,7 +30,7 @@
       158d0003950d16_battery: 
         value_template: "{{ state_attr('binary_sensor.motion_sensor_158d0003950d16', 'battery_level')}}" 
         unit_of_measurement: '%' 
-        entity_id: binary_sensor.motion_sensor_158d0003950d16 
+        # entity_id: binary_sensor.motion_sensor_158d0003950d16 
         device_class: battery 
         friendly_name: 'Движение (коридор)' 
         
@@ -39,7 +39,7 @@
       158d00032c827f_battery: 
         value_template: "{{ state_attr('binary_sensor.motion_sensor_158d00032c827f', 'battery_level')}}" 
         unit_of_measurement: '%' 
-        entity_id: binary_sensor.motion_sensor_158d00032c827f 
+        # entity_id: binary_sensor.motion_sensor_158d00032c827f 
         device_class: battery 
         friendly_name: 'Движение (кухня)' 
     
@@ -48,7 +48,7 @@
       158d0003950e82_battery: 
         value_template: "{{ state_attr('binary_sensor.motion_sensor_158d0003950e82', 'battery_level')}}" 
         unit_of_measurement: '%' 
-        entity_id: binary_sensor.motion_sensor_158d0003950e82 
+        # entity_id: binary_sensor.motion_sensor_158d0003950e82 
         device_class: battery 
         friendly_name: 'Движение (комната)'
     
@@ -57,7 +57,7 @@
       158d000287ef82_battery: 
         value_template: "{{ state_attr('binary_sensor.water_leak_sensor_158d000287ef82', 'battery_level')}}" 
         unit_of_measurement: '%' 
-        entity_id: binary_sensor.water_leak_sensor_158d000287ef82 
+        # entity_id: binary_sensor.water_leak_sensor_158d000287ef82 
         device_class: battery 
         friendly_name: 'Датчика протечки' 
         
@@ -66,7 +66,7 @@
       158d0002d8099e_battery: 
         value_template: "{{ state_attr('sensor.humidity_158d0002d8099e', 'battery_level')}}" 
         unit_of_measurement: '%' 
-        entity_id: sensor.humidity_158d0002d8099e 
+        # entity_id: sensor.humidity_158d0002d8099e 
         device_class: battery 
         friendly_name: 'Общий датчик' 
         
@@ -75,7 +75,6 @@
       158d000398c1e5_battery: 
         value_template: "{{ state_attr('binary_sensor.switch_158d000398c1e5', 'battery_level')}}" 
         unit_of_measurement: '%' 
-        entity_id: binary_sensor.switch_158d000398c1e5 
+        # entity_id: binary_sensor.switch_158d000398c1e5 
         device_class: battery 
         friendly_name: 'Кнопка'
-

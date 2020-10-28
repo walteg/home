@@ -6,7 +6,7 @@ alarm_arm_away:
       entity_id: alarm_control_panel.xiaomi_gateway_alarm 
 
 alarm_arm_disarm: 
-  alias: Включить сигналку 
+  alias: Выключить сигналку 
   sequence: 
     - service: alarm_control_panel.alarm_disarm 
       entity_id: alarm_control_panel.xiaomi_gateway_alarm 
@@ -15,70 +15,179 @@ beward_open:
   alias: Открыть домофон 
   sequence: 
     - service: shell_command.beward_open 
+    
+im_home: 
+  alias: Открыть домофон + отключить сигналку
+  sequence: 
+    - service: shell_command.beward_open 
+    - service: alarm_control_panel.alarm_disarm 
+      entity_id: alarm_control_panel.xiaomi_gateway_alarm 
+      
+beward_up: 
+  alias: Запустить домофон 
+  sequence: 
+    - service: shell_command.beward_up
 
-#=========================CHECK=========================
-check_lampa_v_komnate: 
-  alias: Выключить свет 
-  sequence: 
-    - service: light.turn_off 
-      entity_id: light.lampa_v_komnate 
+down_all_lights:
+  alias: Выключить весь свет
+  sequence:
+   - service: light.turn_off
+     data:
+       entity_id: group.all_lights
+   - service: switch.turn_off  
+     data:
+       entity_id: group.all_lights
+       
+up_all_lights:
+  alias: Включить весь свет
+  sequence:
+   - service: light.turn_on
+     data:
+       entity_id: group.all_lights
+   - service: switch.turn_on  
+     data:
+       entity_id: group.all_lights
+       
+sleep:
+  alias: Спать!
+  sequence:
+   - service: light.turn_off
+     data:
+       entity_id: group.all_lights
+   - service: switch.turn_off  
+     data:
+       entity_id: group.all_lights
+   - service: yandex_station.send_command
+     data:
+       entity_id: media_player.yandex_station_04107884c9145420064f
+       command: sendText
+       text: отбой
+       
+# up_pc: 
+#   alias: Включить комьютер 
+#   sequence: 
+#     - service: switch.turn_on 
+#       entity_id: switch.vkliuchit
       
-check_podsvetka_v_komnate: 
-  alias: Выключить свет 
-  sequence: 
-    - service: light.turn_off 
-      entity_id: light.podsvetka_v_komnate
-      
-check_switch_v_koridore: 
-  alias: Выключить свет 
-  sequence: 
-    - service: switch.turn_off 
-      entity_id: switch.sonoff_100076e305 
-      
-check_podsvetka_v_koridore: 
-  alias: Выключить свет 
-  sequence: 
-    - service: light.turn_off 
-      entity_id: light.gateway_light_04cf8c981fd5 
-      
-check_podsvetka_na_kukhne: 
-  alias: Выключить свет 
-  sequence: 
-    - service: light.turn_off 
-      entity_id: light.podsvetka_na_kukhne
-      
-check_humidifier: 
-  alias: Выключить увлажнитель 
-  sequence: 
-    - service: fan.turn_off 
-      entity_id: fan.humidifier
+# down_pc: 
+#   alias: Выключить комьютер 
+#   sequence: 
+#   - service: hassio.addon_stdin 
+#      data_template:
+#       addon: core_rpc_shutdown
+#       input: pc
 
-#=========================TEST=========================
-# outdoor_temperature:
-#   sequence:
-#     - service: notify.notify
-#       data_template:
-#         message: Температура на улице {{ state_attr('weather.gismeteo', 'humidity') }}
-
-
-#   alias: Проверь интернет
-#   description: ''
-#   trigger:
-#   - event_data:
-#       text: Проверь интернет
-#     event_type: yandex_intent
-#     platform: event
-#   condition: []
-#   action:
-#   - service: tts.alice_say
-#     entity_id: media_player.yandex_station_xxxxxx
-#     data_template:
-#       message: Скорость интернета "{{ states('sensor.speedtest_download') }}"
+#=========================alisa lights=========================
+# check_lampa_v_komnate: 
+#   alias: Выключить свет 
+#   sequence: 
+#     - service: light.turn_off 
+#       entity_id: light.lampa_v_komnate 
       
-check_temp:
-  alias: Температура в комнате
+# check_podsvetka_v_komnate: 
+#   alias: Выключить свет 
+#   sequence: 
+#     - service: light.turn_off 
+#       entity_id: light.podsvetka_v_komnate
+      
+# check_switch_v_koridore: 
+#   alias: Выключить свет 
+#   sequence: 
+#     - service: switch.turn_off 
+#       entity_id: switch.sonoff_100076e305 
+      
+# check_podsvetka_v_koridore: 
+#   alias: Выключить свет 
+#   sequence: 
+#     - service: light.turn_off 
+#       entity_id: light.gateway_light_04cf8c981fd5 
+      
+# check_podsvetka_na_kukhne: 
+#   alias: Выключить свет 
+#   sequence: 
+#     - service: light.turn_off 
+#       entity_id: light.podsvetka_na_kukhne
+      
+# check_humidifier: 
+#   alias: Выключить увлажнитель 
+#   sequence: 
+#     - service: fan.turn_off 
+#       entity_id: fan.humidifier
+
+mimimi:
+  alias: Доброжелательность
   sequence:
     - service: tts.yandex_station_say
       entity_id: media_player.yandex_station_04107884c9145420064f
       data_template:
-        message: Температура в комнате "{{ states('sensor.fan_humidifier_temperature') }}" градуса
+        message: С возвращением! Пока вас не было
+
+
+check_system:
+  alias: Состояние системы
+  sequence:
+    - service: tts.yandex_station_say
+      entity_id: media_player.yandex_station_04107884c9145420064f
+      data_template:
+        message: Загрузка процессора {{ states('sensor.processor_use')}}%, загрузка памяти {{ states('sensor.memory_use_percent') | round() }}%, использование диска {{ states('sensor.disk_use_percent') | round() }}%
+        
+home_news:
+  alias: Домашние новости
+  sequence:
+    - service: tts.yandex_station_say
+      entity_id: media_player.yandex_station_04107884c9145420064f
+      data_template:
+        message: У вас вышли обновления{% for x in state_attr('sensor.hacs', 'repositories') %} {{x.display_name}}, {% endfor %}
+#=========================TEST=========================
+
+
+# yandex_system_info:
+#   alias: Состояние системы
+#   sequence:
+#     - service: tts.yandex_station_say
+#       entity_id: media_player.yandex_station_04107884c9145420064f
+#       data_template:
+#         message: Загрузка процессора {{ states('sensor.processor_use')}}%, загрузка памяти {{ states('sensor.memory_use_percent')}}%, использование диска {{ states('sensor.disk_use_percent')}}%
+
+
+# - alias: Увлажнитель включен
+#   initial_state: true 
+#   trigger: 
+#     - platform: state 
+#       entity_id: fan.humidifier 
+#       to: 'on' 
+#   action: 
+#     - service: tts.yandex_station_say 
+#       data_template:
+#         message: Увлажнитель включен
+
+
+# sonoff: 
+#   alias: включить сонофф
+#   sequence: 
+#     - service: switch.turn_on 
+#       entity_id: switch.sonoff_100076e305 
+      
+      
+# yandex_command_test:
+#   alias: yandex_command_test
+#   sequence:
+#   - service: yandex_station.send_command
+#     data:
+#       entity_id: media_player.yandex_station_04107884c9145420064f
+#       command: sendText
+#       text: поставь будильник на 10 утра
+#       for:
+#         seconds: 1
+#   - service: yandex_station.send_command
+#     data:
+#       entity_id: media_player.yandex_station_04107884c9145420064f
+#       command: sendText
+#       text: громкость 3
+#       for:
+#         seconds: 1
+#   - service: yandex_station.send_command
+#     data:
+#       entity_id: media_player.yandex_station_04107884c9145420064f
+#       command: sendText
+#       text: включи шум грозы

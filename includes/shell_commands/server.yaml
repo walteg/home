@@ -1,0 +1,5 @@
+pc_up: ssh walteg@192.168.103.14 'wakeonlan -p 9 30:9C:23:A2:AB:37'
+pc_down: ssh walteg@192.168.103.14 'net rpc shutdown -I 192.168.103.15 -U walteg%nwcavert'
+pc_down_cancel: ssh walteg@192.168.103.14 'net rpc abortshutdown -I 192.168.103.15 -U walteg%nwcavert'
+
+

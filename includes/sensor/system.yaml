@@ -1,29 +1,79 @@
-  - platform: systemmonitor 
-    resources: 
-      - type: processor_use 
-      - type: disk_use_percent 
-        arg: / 
-      - type: memory_use_percent 
-      - type: last_boot 
-      - type: disk_free 
-        arg: / 
-      - type: network_in
-        arg: eth0
-      - type: network_out
-        arg: eth0
-        
-        
-  - platform: command_line
-    name: CPU Temperature
-    command: "cat /sys/class/thermal/thermal_zone0/temp"
-    # If errors occur, make sure configuration file is encoded as UTF-8
-    unit_of_measurement: "°C"
-    value_template: '{{ value | multiply(0.001) | round(1) }}'
+- platform: systemmonitor 
+  resources: 
+  - type: processor_use 
+  - type: disk_use_percent 
+    arg: / 
+  - type: memory_use_percent 
+  - type: last_boot 
+  - type: disk_free 
+    arg: / 
+  - type: network_in
+    arg: enp3s0
+  - type: network_out
+    arg: enp3s0
+
+- platform: command_line
+  name: CPU Temperature
+  command: "cat /sys/class/thermal/thermal_zone0/temp"
+  # If errors occur, make sure configuration file is encoded as UTF-8
+  unit_of_measurement: "°C"
+  value_template: '{{ value | multiply(0.001) | round(1) }}'
     
-    
-    
-#   - platform: command_line
-#     name: UPS
-#     command: "python3 /config/python_scripts/demo.py"
-#     unit_of_measurement: "V"
-#     value_template: '{{ value | round(1) }}'
+- platform: template
+  sensors:
+    hacs_update:
+     friendly_name: 'Обновления HACS'
+     value_template: '{{ states("sensor.hacs") }}'
+     icon_template: mdi:cellphone-arrow-down
+     
+    superviser_update:
+     friendly_name: 'Обновления superviser'
+     value_template: "{{ state_attr('binary_sensor.updater', 'newest_version') }}"
+     unit_of_measurement: "ma"
+     icon_template: mdi:cellphone-arrow-down
+     
+    plug_stiralka_1:
+     friendly_name: 'Ток'
+     value_template: "{{ state_attr('switch.stiralka', 'current') }}"
+     unit_of_measurement: "mA"
+     device_class: power
+     icon_template: mdi:flash
+     
+    plug_stiralka_2:
+     friendly_name: 'Потребление'
+     value_template: "{{ state_attr('switch.stiralka', 'current_consumption') }}"
+     unit_of_measurement: "W"
+     device_class: power
+     icon_template: mdi:flash
+     
+    plug_stiralka_3:
+     friendly_name: 'Вольтаж'
+     value_template: "{{ state_attr('switch.stiralka', 'voltage') }}"
+     unit_of_measurement: "V"
+     device_class: power
+     icon_template: mdi:flash
+
+    # ac_cost_month:
+    #   friendly_name: "Стоимость электричества в этом месяце"
+    #   unit_of_measurement: '₽'
+    #   icon_template: mdi:currency-rub
+    #   value_template: "{{ (states('sensor.ac_power_consumption_peak') | float * 0.23006 + states('sensor.ac_power_consumption_offpeak') | float * 0.21269) | round(2) }}"
+
+    # ac_power_consumption:
+    #   friendly_name: "AC Power Consumption"
+    #   unit_of_measurement: 'W'
+    #   icon_template: mdi:flash
+    #   value_template: "{{ state_attr('switch.ac_woonkamer', 'load_power') }}"
+    ac_cost_month:
+      friendly_name: "Стоимость в этом месяце"
+      unit_of_measurement: '₽'
+      icon_template: mdi:currency-rub
+      value_template: "{{ (states('sensor.energy_spent') | float * 3.36) | round(2) }}"
+
+- platform: integration
+  source: sensor.energy
+  name: energy_spent
+  unit_prefix: k
+  round: 2
+  
+  

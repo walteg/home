@@ -40,7 +40,8 @@ from .const import (
     ERR_NOT_SUPPORTED_IN_CURRENT_MODE,
     CONF_CHANNEL_SET_VIA_MEDIA_CONTENT_ID, CONF_RELATIVE_VOLUME_ONLY,
     CONF_ENTITY_RANGE_MAX, CONF_ENTITY_RANGE_MIN, 
-    CONF_ENTITY_RANGE_PRECISION, CONF_ENTITY_RANGE)
+    CONF_ENTITY_RANGE_PRECISION, CONF_ENTITY_RANGE,
+    CONF_ENTITY_MODE_MAP)
 from .error import SmartHomeError
 
 _LOGGER = logging.getLogger(__name__)
@@ -221,9 +222,8 @@ class OnOffCapability(_Capability):
                     service = vacuum.SERVICE_STOP
                 else:
                     service = SERVICE_TURN_OFF
-        elif self.state.domain == scene.DOMAIN or self.state.domain == \
-                script.DOMAIN:
-            service = SERVICE_TURN_ON
+        elif self.state.domain == scene.DOMAIN or self.state.domain == script.DOMAIN:
+            service = SERVICE_TURN_ON if state['value'] else SERVICE_TURN_OFF
         elif self.state.domain == lock.DOMAIN:
             service = SERVICE_UNLOCK if state['value'] else \
                 SERVICE_LOCK
@@ -341,6 +341,34 @@ class PauseCapability(_ToggleCapability):
             }, blocking=True, context=data.context)
 
 
+@register_capability
+class OscillationCapability(_ToggleCapability):
+    """Oscillation functionality."""
+
+    instance = 'oscillation'
+
+    @staticmethod
+    def supported(domain, features, entity_config, attributes):
+        """Test if state is supported."""
+        return domain == fan.DOMAIN and features & fan.SUPPORT_OSCILLATE
+
+    def get_value(self):
+        """Return the state value of this capability for this entity."""
+        return bool(self.state.attributes.get(fan.ATTR_OSCILLATING))
+
+    async def set_state(self, data, state):
+        """Set device state."""
+        if type(state['value']) is not bool:
+            raise SmartHomeError(ERR_INVALID_VALUE, "Value is not boolean")
+
+        await self.hass.services.async_call(
+            self.state.domain,
+            fan.SERVICE_OSCILLATE, {
+                ATTR_ENTITY_ID: self.state.entity_id,
+                fan.ATTR_OSCILLATING: state['value']
+            }, blocking=True, context=data.context)
+
+
 class _ModeCapability(_Capability):
     """Base class of capabilities with mode functionality like thermostat mode
     or fan speed.
@@ -349,6 +377,36 @@ class _ModeCapability(_Capability):
     """
 
     type = CAPABILITIES_MODE
+    modes_map = {}
+
+    def get_modes_map_from_config(self):
+        if CONF_ENTITY_MODE_MAP in self.entity_config:
+            modes = self.entity_config.get(CONF_ENTITY_MODE_MAP)
+            if self.instance in modes:
+                return modes.get(self.instance)
+        return None
+
+    def get_yandex_mode_by_ha_mode(self, ha_mode):
+        modes = self.get_modes_map_from_config()
+        if modes is None:
+            modes = self.modes_map
+
+        for yandex_mode, names in modes.items():
+            if str(ha_mode).lower() in names:
+                return yandex_mode
+        return None
+
+    def get_ha_mode_by_yandex_mode(self, yandex_mode, available_modes):
+        modes = self.get_modes_map_from_config()
+        if modes is None:
+            modes = self.modes_map
+
+        ha_modes = modes[yandex_mode]
+        for ha_mode in ha_modes:
+            for am in available_modes:
+                if str(am).lower() == ha_mode:
+                    return ha_mode
+        return None
 
 
 @register_capability
@@ -502,7 +560,7 @@ class FanSpeedCapability(_ModeCapability):
 
     instance = 'fan_speed'
 
-    values = {
+    modes_map = {
         'auto': ['auto'],
         'low': ['low', 'min', 'silent', 'level 2'],
         'medium': ['medium', 'middle', 'level 3'],
@@ -530,7 +588,7 @@ class FanSpeedCapability(_ModeCapability):
         speeds = []
         added = []
         for ha_value in speed_list:
-            value = self.get_yandex_value_by_ha_value(ha_value)
+            value = self.get_yandex_mode_by_ha_mode(ha_value)
             if value is not None and value not in added:
                 speeds.append({'value': value})
                 added.append(value)
@@ -541,27 +599,15 @@ class FanSpeedCapability(_ModeCapability):
             'ordered': True
         }
 
-    def get_yandex_value_by_ha_value(self, ha_value):
-        for yandex_value, names in self.values.items():
-            for name in names:
-                if ha_value.lower().find(name) != -1:
-                    return yandex_value
-        return None
-
     def get_ha_by_yandex_value(self, yandex_value):
         if self.state.domain == climate.DOMAIN:
             speed_list = self.state.attributes.get(climate.ATTR_FAN_MODES)
         elif self.state.domain == fan.DOMAIN:
             speed_list = self.state.attributes.get(fan.ATTR_SPEED_LIST)
         else:
-            speed_list = []
+            return None
 
-        for ha_value in speed_list:
-            if yandex_value in self.values:
-                for name in self.values[yandex_value]:
-                    if ha_value.lower().find(name) != -1:
-                        return ha_value
-        return None
+        return self.get_ha_mode_by_yandex_mode(yandex_value, speed_list)
 
     def get_value(self):
         """Return the state value of this capability for this entity."""
@@ -573,11 +619,13 @@ class FanSpeedCapability(_ModeCapability):
             ha_value = None
 
         if ha_value is not None:
-            yandex_value = self.get_yandex_value_by_ha_value(ha_value)
+            yandex_value = self.get_yandex_mode_by_ha_mode(ha_value)
             if yandex_value is not None:
                 return yandex_value
 
-        return 'auto'
+        modes = self.parameters()['modes']
+
+        return modes[0]['value'] if len(modes) > 0 else 'auto'
 
     async def set_state(self, data, state):
         """Set device state."""
@@ -633,7 +681,7 @@ class TemperatureCapability(_RangeCapability):
         if self.state.domain == water_heater.DOMAIN:
             min_temp = self.state.attributes.get(water_heater.ATTR_MIN_TEMP)
             max_temp = self.state.attributes.get(water_heater.ATTR_MAX_TEMP)
-            precision = self.state.attributes.get(water_heater.ATTR_TARGET_TEMP_STEP, 0.5)
+            precision = 0.5
         elif self.state.domain == climate.DOMAIN:
             min_temp = self.state.attributes.get(climate.ATTR_MIN_TEMP)
             max_temp = self.state.attributes.get(climate.ATTR_MAX_TEMP)
@@ -995,13 +1043,15 @@ class CleanupModeCapability(_ModeCapability):
 
     instance = 'cleanup_mode'
 
-    values = {
-        'auto': {'auto'},
-        'min': {'mop'},
-        'quiet': {'low', 'min'},
-        'normal': {'medium', 'middle'},
-        'turbo': {'high', 'turbo'},
+    # 101-105 xiaomi miio fan speeds
+    modes_map = {
+        'auto': {'auto', '102'},
+        'turbo': {'turbo', 'high', '104'},
+        'min': {'min', 'mop'},
         'max': {'max', 'strong'},
+        'express': {'express', '105'},
+        'normal': {'normal', 'medium', 'middle', '103'},
+        'quiet': {'quiet', 'low', 'min', 'silent', '101'},
     }
 
     @staticmethod
@@ -1021,7 +1071,7 @@ class CleanupModeCapability(_ModeCapability):
         speeds = []
         added = set()
         for ha_value in speed_list:
-            value = self.get_yandex_value_by_ha_value(ha_value)
+            value = self.get_yandex_mode_by_ha_mode(ha_value)
             if value is not None and value not in added:
                 speeds.append({'value': value})
                 added.add(value)
@@ -1031,22 +1081,13 @@ class CleanupModeCapability(_ModeCapability):
             'modes': speeds
         }
 
-    def get_yandex_value_by_ha_value(self, ha_value):
-        for yandex_value, names in self.values.items():
-            if ha_value.lower() in names:
-                return yandex_value
-        return None
-
     def get_ha_by_yandex_value(self, yandex_value):
         if self.state.domain == vacuum.DOMAIN:
-            instance_speeds = set(self.state.attributes.get(vacuum.ATTR_FAN_SPEED_LIST))
+            instance_speeds = self.state.attributes.get(vacuum.ATTR_FAN_SPEED_LIST)
         else:
-            instance_speeds = {}
+            return None
 
-        known_speeds = self.values.get(yandex_value, set())
-
-        # Find first intersection of known modes and actual modes:
-        return next(iter(instance_speeds & known_speeds), None)
+        return self.get_ha_mode_by_yandex_mode(yandex_value, instance_speeds)
 
     def get_value(self):
         """Return the state value of this capability for this entity."""
@@ -1056,11 +1097,13 @@ class CleanupModeCapability(_ModeCapability):
             ha_value = None
 
         if ha_value is not None:
-            yandex_value = self.get_yandex_value_by_ha_value(ha_value)
+            yandex_value = self.get_yandex_mode_by_ha_mode(ha_value)
             if yandex_value is not None:
                 return yandex_value
 
-        return 'auto'
+        modes = self.parameters()['modes']
+
+        return modes[0]['value'] if len(modes) > 0 else 'auto'
 
     async def set_state(self, data, state):
         """Set device state."""

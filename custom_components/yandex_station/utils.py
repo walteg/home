@@ -5,7 +5,8 @@ import uuid
 from datetime import datetime
 from logging import Logger
 
-from aiohttp import web
+from aiohttp import web, ClientSession
+from homeassistant.components import frontend
 from homeassistant.components.http import HomeAssistantView
 from homeassistant.helpers.typing import HomeAssistantType
 
@@ -209,3 +210,72 @@ async def get_zeroconf_singleton(hass: HomeAssistantType):
     except:
         from zeroconf import Zeroconf
         return Zeroconf()
+
+
+RE_ID3 = re.compile(br'(Text|TIT2)(....)\x00\x00\x03(.+?)\x00',
+                    flags=re.DOTALL)
+
+
+async def get_tts_message(session: ClientSession, url: str):
+    """Текст сообщения записывается в файл в виде ID3-тегов. Нужно скачать файл
+    и прочитать этот тег. В старых версиях ХА валидный ID3-тег, а в новых -
+    битый.
+    """
+    try:
+        r = await session.get(url)
+        data = await r.read()
+
+        m = RE_ID3.findall(data)
+        if len(m) == 1 and m[0][0] == b'TIT2':
+            # old Hass version has valid ID3 tags with `TIT2` for Title
+            _LOGGER.debug(f"Получение TTS из ID3")
+            m = m[0]
+        elif len(m) == 3 and m[2][0] == b'Text':
+            # latest Hass version has bug with `Text` for all tags
+            # there are 3 tags and the last one we need
+            _LOGGER.debug(f"Получение TTS из битого ID3")
+            m = m[2]
+        else:
+            _LOGGER.debug(f"Невозможно получить TTS: {data}")
+            return None
+
+        # check tag value length
+        if int.from_bytes(m[1], 'big') - 2 == len(m[2]):
+            return m[2].decode('utf-8')
+
+    except:
+        _LOGGER.exception("Ошибка получения сообщения TTS")
+
+    return None
+
+
+def fix_recognition_lang(hass: HomeAssistantType, folder: str, lng: str):
+    path = frontend._frontend_root(None).joinpath(folder)
+    for child in path.iterdir():
+        # find all chunc.xxxx.js files
+        if child.suffix != '.js' and 'chunk.' not in child.name:
+            continue
+
+        with open(child, 'rb') as f:
+            raw = f.read()
+
+        # find chunk file with recognition code
+        if b'this.recognition.lang=' not in raw:
+            continue
+
+        raw = raw.replace(b'en-US', lng.encode())
+
+        async def recognition_lang(request):
+            _LOGGER.debug("Send fixed recognition lang to client")
+            return web.Response(body=raw,
+                                content_type='application/javascript')
+
+        hass.http.app.router.add_get('/frontend_latest/' + child.name,
+                                     recognition_lang)
+
+        resource = hass.http.app.router._resources.pop()
+        hass.http.app.router._resources.insert(40, resource)
+
+        _LOGGER.debug(f"Fix recognition lang in {folder} to {lng}")
+
+        return

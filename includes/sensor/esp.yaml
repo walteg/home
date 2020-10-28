@@ -1,0 +1,6 @@
+- platform: template
+  sensors:
+    esp32_ble_uptime:
+     friendly_name: 'Время работы'
+     value_template: "{% set t = states('sensor.esp32_ble_uptime') | int %} {{ '{:d} дней {:02d}:{:02d}:{:02d}'.format(t // 86400, (t // 3600) % 24, (t % 3600) // 60, (t % 3600) % 60) }}"
+     icon_template: mdi:timer-outline

@@ -1,0 +1,20 @@
+pc_up: 
+  alias: Включить компьютер 
+  sequence: 
+    - service: shell_command.pc_up
+    - service: shell_command.pc_down
+
+pc_down: 
+  alias: Выключить компьютер
+  sequence: 
+    - service: shell_command.pc_up
+    - service: shell_command.pc_down
+    
+pc_down_cancel: 
+  alias: Отменить выключение компьютера
+  sequence: 
+    - service: shell_command.pc_down_cancel
+
+
+
+

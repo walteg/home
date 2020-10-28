@@ -1,9 +1,8 @@
-
 # Configure a default setup of Home Assistant (frontend, api, etc)
 default_config:
 
 homeassistant:
-   customize: !include includes/customize.yaml
+  customize: !include includes/customize.yaml
    
 frontend: 
   themes: !include_dir_merge_named themes 
@@ -11,24 +10,17 @@ frontend:
 #Конфиги вынесены отдельно
 group: !include includes/groups.yaml
 automation: !include includes/automations.yaml
-# script: !include includes/scripts.yaml
-scene: !include includes/scenes.yaml
-yeelight: !include includes/yeelight.yaml 
-tts: !include includes/tts.yaml
+# scene: !include includes/scenes.yaml
+# tts: !include includes/tts.yaml
 weather: !include includes/weather.yaml
 
 
 #Отдельные папки с конфигами
-sensor: !include_dir_merge_list includes/sensor 
+sensor: !include_dir_merge_list includes/sensor
+binary_sensor: !include_dir_merge_list includes/binary_sensor
 script: !include_dir_merge_named includes/scripts
 shell_command: !include_dir_merge_named includes/shell_commands
 
-hacs: 
-    token: !secret HACS_github
-    appdaemon: true 
-    python_script: tue 
-    theme: true 
-    
 sonoff: 
   username: !secret username_sonoff
   password: !secret password_sonoff
@@ -36,7 +28,7 @@ sonoff:
   
 fan: 
   - platform: xiaomi_miio_airpurifier 
-    name: Humidifier 
+    name: Увлажнитель 
     host: 192.168.103.5 
     token: !secret token_xiaomi_airhumidifier 
     model: deerma.humidifier.mjjsq 
@@ -44,27 +36,75 @@ fan:
 yandex_station:
   username: !secret username_yandex
   password: !secret password_yandex 
+  recognition_lang: ru-RU
   devices:
     04107884c9145420064f:  # device_id вашей колонки
       host: 192.168.100.11
-      name: Большая колонка  # имя можно задать и тут
+      name: Яндекс станция  # имя можно задать и тут
 
+conversation:
+  intents:
+    media_player.yandex_station_04107884c9145420064f: [.+]  
+
+ios:
+
+
+speedtestdotnet:
+  scan_interval:
+    minutes: 5
 
 yandex_smart_home:
+
+switch:
+  - platform: template
+    switches:
+      pc:
+        friendly_name: "Компьютер"
+        turn_on:
+          service: script.pc_up
+          data:
+            entity_id: pc
+        turn_off:
+          service: script.pc_down_cancel
+          data:
+            entity_id: pc
+            # icon: mdi:power-standby
+
+utility_meter:
+  energy:
+    source: sensor.plug_stiralka_2
+    cycle: monthly
+
+cover:
+  - platform: template
+    covers:
+      pc2:
+        friendly_name: "Комп2"
+        open_cover:
+          service: script.pc_up
+        close_cover:
+          service: script.pc_down
+        stop_cover:
+          service: script.pc_down_cancel
+
+# calendar:
+#   - platform: caldav
+#     username: !secret username_yandex
+#     password: !secret password_yandex
+#     url: https://caldav.yandex.ru/calendars/walteg74%40yandex.ru/events-7383080/
+#     calendars:
+    #   - 'me'
+    # custom_calendars:
+    #   - name: holiday
+    #     calendar: me
+    #     search: 'Holiday'
+
+
 
 camera:
   - platform: local_file
     file_path: /config/www/snapshot_beward.jpeg
 
-# media_player:
-#   # Use the Python ADB implementation
-#   - platform: androidtv
-#     name: IsBox
-#     host: 192.168.103.9
-#     adb_server_ip: 192.168.103.3
-#     adb_server_port: 5037
-    
-    
 # miio_gateway:
 #   host: 192.168.103.9
 #   port: 54321

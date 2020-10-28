@@ -1,0 +1,16 @@
+  - platform: workday
+    country: RU
+
+  - platform: template
+    sensors:
+      repairs_allowed:
+        value_template: >-
+          {% set x = states('sensor.time') %}
+          {% set hour = now().strftime("%H") | int  %}
+          {{ states('binary_sensor.workday_sensor') == 'on' and ( ( hour >= 9 and hour < 13 ) or ( hour >= 15 and hour < 19) ) }}
+      
+      noise_allowed:
+        value_template: >-
+          {% set x = states('sensor.time') %}
+          {% set hour = now().strftime("%H") | int  %}
+          {{ states('binary_sensor.workday_sensor') == 'on' and ( hour >= 7 and hour < 23 ) }}

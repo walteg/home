@@ -1,49 +1,46 @@
   - platform: template 
     sensors: 
       fan_humidifier_temperature: 
-        value_template: "{{ state_attr('fan.humidifier', 'temperature')}}" 
+        value_template: "{{ state_attr('fan.uvlazhnitel', 'temperature')}}" 
         unit_of_measurement: '°C' 
-        entity_id: fan.humidifier 
+        # entity_id: fan.humidifier 
         device_class: temperature 
         friendly_name: 'Температура увлажнителя' 
 
       fan_humidifier_humidity: 
-        value_template: "{{ state_attr('fan.humidifier', 'humidity')}}" 
+        value_template: "{{ state_attr('fan.uvlazhnitel', 'humidity')}}" 
         unit_of_measurement: '%' 
-        entity_id: fan.humidifier 
+        # entity_id: fan.humidifier 
         device_class: humidity 
         friendly_name: 'Влажность увлажнителя' 
 
       fan_humidifier_speed:
         friendly_name: 'Скорость увлажнителя'
-        value_template: "{{ state_attr('fan.humidifier', 'speed') }}"
+        value_template: "{{ state_attr('fan.uvlazhnitel', 'speed') }}"
         icon_template: mdi:speedometer
         
       fan_humidifier_buzzer: 
-        value_template: "{{ state_attr('fan.humidifier', 'buzzer')}}" 
+        value_template: "{{ state_attr('fan.uvlazhnitel', 'buzzer')}}" 
         unit_of_measurement: '°C' 
-        entity_id: fan.humidifier 
-        # device_class: buzzer 
+        # entity_id: fan.humidifier 
         friendly_name: 'Режим увлажнителя'
         
       fan_humidifier_no_water: 
-        value_template: "{{ state_attr('fan.humidifier', 'no_water')}}" 
+        value_template: "{{ state_attr('fan.uvlazhnitel', 'no_water')}}" 
         # unit_of_measurement: '°C' 
-        entity_id: fan.humidifier 
-        # device_class: no_water 
+        # entity_id: fan.humidifier 
         friendly_name: 'Вода закончилась'
         icon_template: mdi:water-off
         
       fan_humidifier_water_tank_detached: 
-        value_template: "{{ state_attr('fan.humidifier', 'water_tank_detached')}}" 
-        entity_id: fan.humidifier 
+        value_template: "{{ state_attr('fan.uvlazhnitel', 'water_tank_detached')}}" 
+        # entity_id: fan.humidifier 
         # device_class: water_tank_detached 
         friendly_name: 'Снят бак с водой'
         icon_template: mdi:water-boiler-off
         
       fan_humidifier_speed_list: 
-        value_template: "{{ state_attr('fan.humidifier', 'speed_list')}}" 
+        value_template: "{{ state_attr('fan.uvlazhnitel', 'speed_list')}}" 
         unit_of_measurement: '°C' 
-        entity_id: fan.humidifier 
-        # device_class: speed_list 
+        # entity_id: fan.humidifier 
         friendly_name: 'Режим увлажнителя'

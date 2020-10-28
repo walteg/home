@@ -1,0 +1,8 @@
+all_lights:
+  name: Весь свет
+  entities:
+  - light.komnata
+  - light.komnata_2
+  - switch.sonoff_100076e305
+  - light.gateway_light_04cf8c981fd5
+  - light.kukhnia

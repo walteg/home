@@ -50,21 +50,30 @@ class YandexQuasar:
 
     async def _request(self, method: str, url: str, **kwargs):
         """Запрос с учётом CSRF-токена."""
-        for _ in range(2):
-            if self.csrf_token is None:
-                _LOGGER.debug("Обновление CSRF-токена")
-                r = await self.session.get('https://yandex.ru/quasar/iot')
-                raw = await r.text()
-                m = RE_CSRF.search(raw)
-                assert m, raw
-                self.csrf_token = m[1]
+        for _ in range(3):
+            if method != 'get':
+                if self.csrf_token is None:
+                    _LOGGER.debug("Обновление CSRF-токена")
+                    r = await self.session.get('https://yandex.ru/quasar/iot')
+                    raw = await r.text()
+                    m = RE_CSRF.search(raw)
+                    assert m, raw
+                    self.csrf_token = m[1]
 
-            kwargs['headers'] = {'x-csrf-token': self.csrf_token}
+                kwargs['headers'] = {'x-csrf-token': self.csrf_token}
+
             r = await getattr(self.session, method)(url, **kwargs)
-            if r.status == 200:
-                return r
 
-            self.csrf_token = None
+            if r.status == 401:
+                # 401 - no cookies
+                await self.login(self.main_token['access_token'])
+            elif r.status == 403:
+                # 403 - no x-csrf-token
+                self.csrf_token = None
+            elif r.status == 200:
+                return r
+            else:
+                _LOGGER.warning(f"{url} return {r.status} status")
 
         raise Exception(f"{url} return {r.status} status")
 
@@ -76,6 +85,8 @@ class YandexQuasar:
 
             if not self.main_token:
                 self.main_token = await self.get_main_token(username, password)
+
+            if not await self.check_login():
                 await self.login(self.main_token['access_token'])
                 self.save(cachefile)
 
@@ -181,8 +192,20 @@ class YandexQuasar:
         assert resp['status'] == 'ok', resp
         return resp
 
+    async def check_login(self) -> bool:
+        try:
+            r = await self.session.get(
+                'https://iot.quasar.yandex.ru/m/user/devices')
+            resp = await r.json()
+            return resp['status'] == 'ok'
+        except:
+            return False
+
     async def login(self, x_token: str):
         _LOGGER.debug("Логин в Яндексе через главный токен.")
+
+        # python 3.8 cookie error fix
+        self.session.cookie_jar.clear()
 
         payload = {
             'type': 'x-token',
@@ -203,8 +226,8 @@ class YandexQuasar:
     async def load_speakers(self) -> list:
         _LOGGER.debug("Получение списка устройств.")
 
-        r = await self.session.get(
-            'https://iot.quasar.yandex.ru/m/user/devices')
+        r = await self.session.request(
+            'get', 'https://iot.quasar.yandex.ru/m/user/devices')
         resp = await r.json()
         assert resp['status'] == 'ok', resp
 
@@ -231,8 +254,9 @@ class YandexQuasar:
         """Загружаем device_id и platform для колонок. Они не приходят с полным
         списком устройств.
         """
-        r = await self.session.get(f"https://iot.quasar.yandex.ru/m/user/"
-                                   f"devices/{device['id']}/configuration")
+        r = await self.session.request(
+            'get', f"https://iot.quasar.yandex.ru/m/user/devices/"
+                   f"{device['id']}/configuration")
         resp = await r.json()
         assert resp['status'] == 'ok', resp
         # device_id and platform
@@ -240,8 +264,8 @@ class YandexQuasar:
 
     async def load_scenarios(self) -> dict:
         """Получает список сценариев, которые мы ранее создали."""
-        r = await self.session.get(
-            'https://iot.quasar.yandex.ru/m/user/scenarios')
+        r = await self.session.request(
+            'get', 'https://iot.quasar.yandex.ru/m/user/scenarios')
         resp = await r.json()
         assert resp['status'] == 'ok', resp
 
@@ -264,7 +288,7 @@ class YandexQuasar:
                     'type': 'devices.capabilities.quasar.server_action',
                     'state': {
                         'instance': 'phrase_action',
-                        'value': '-'
+                        'value': 'пустышка'
                     }
                 }]
             }]
@@ -276,17 +300,25 @@ class YandexQuasar:
         assert resp['status'] == 'ok', resp
 
     async def add_intent(self, name: str, text: str, num: int):
+        speaker = [{
+            'type': 'devices.capabilities.quasar.server_action',
+            'state': {
+                'instance': 'phrase_action',
+                'value': text
+            }
+        }] if text else [{
+            'type': 'devices.capabilities.quasar.server_action',
+            'state': {
+                'instance': 'text_action',
+                'value': "Yandex Intents громкость 100"
+            }
+        }]
+
         payload = {
             'name': name,
             'icon': 'home',
             'trigger_type': 'scenario.trigger.voice',
-            'requested_speaker_capabilities': [{
-                'type': 'devices.capabilities.quasar.server_action',
-                'state': {
-                    'instance': 'phrase_action',
-                    'value': text
-                }
-            }],
+            'requested_speaker_capabilities': speaker,
             'devices': [{
                 'id': self.hass_id,
                 'capabilities': [{
@@ -381,8 +413,8 @@ class YandexQuasar:
     async def get_device_config(self, device: dict) -> dict:
         payload = {'device_id': device['device_id'],
                    'platform': device['platform']}
-        r = await self.session.get(
-            'https://quasar.yandex.ru/get_device_config',
+        r = await self.session.request(
+            'get', 'https://quasar.yandex.ru/get_device_config',
             params=payload)
         resp = await r.json()
         assert resp['status'] == 'ok', resp
